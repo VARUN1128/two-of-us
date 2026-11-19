@@ -3,9 +3,11 @@ import type { BingoBoard, BingoConnection, Participant, WinningLine } from '../.
 import { evaluateBingoBoard, getWinningCellIndices } from '../../lib/bingoLogic';
 import { BingoInteractionModal } from './BingoInteractionModal';
 import { BingoSuccessNotification } from './BingoSuccessNotification';
+import { BingoLetterTracker } from '../common/BingoLetterTracker';
 import { ProgressBar } from '../common/ProgressBar';
-import { Users, Award, Trophy, Check, ArrowRight } from 'lucide-react';
+import { Users, Award, Trophy, Check, ArrowRight, Download, Smartphone } from 'lucide-react';
 import { AppDataStore } from '../../lib/store';
+import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
 
 interface HumanBingoPageProps {
   participant: Participant;
@@ -27,7 +29,9 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newlyCompletedLines, setNewlyCompletedLines] = useState<WinningLine[]>([]);
+  const [notificationCutLetters, setNotificationCutLetters] = useState<string[]>([]);
   const [viewCompletedLetter, setViewCompletedLetter] = useState<string | null>(null);
+  const [savedLocallyToast, setSavedLocallyToast] = useState(false);
 
   const evalResult = evaluateBingoBoard(board.letters, board.completed_letters);
   const winningIndices = getWinningCellIndices(board.letters, board.completed_letters);
@@ -72,6 +76,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
 
       if (result.newlyCompletedLines.length > 0) {
         setNewlyCompletedLines(result.newlyCompletedLines);
+        setNotificationCutLetters(result.newlyCutLetters || []);
       }
 
       if (result.isFullBoardCompleted) {
@@ -88,17 +93,32 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
 
   return (
     <div className="flex-1 flex flex-col max-w-md mx-auto w-full px-4 py-5 animate-in fade-in duration-300">
-      {/* Top Banner / Headline */}
-      <div className="text-center space-y-1.5 mb-4">
-        <h2
-          className="text-2xl md:text-3xl font-medium text-[#0B3B3D] tracking-tight"
-          style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+      {/* Top Banner / Headline & Connections Shortcut */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="space-y-0.5">
+          <h2
+            className="text-2xl md:text-3xl font-medium text-[#0B3B3D] tracking-tight text-left"
+            style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+          >
+            Human Bingo
+          </h2>
+          <p className="text-xs text-[#0B3B3D]/70 font-sans text-left">
+            Connect & discover stories across the room
+          </p>
+        </div>
+
+        {/* Connections Diary Shortcut */}
+        <button
+          onClick={onViewConnections}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold shadow-2xs transition-colors cursor-pointer shrink-0"
+          title="View your connections diary"
         >
-          Human Bingo
-        </h2>
-        <p className="text-xs text-[#0B3B3D]/75 font-sans leading-relaxed max-w-xs mx-auto">
-          Find someone whose name starts with the letter on your board. Meet them, take a selfie together, answer a fun question, and mark that letter off.
-        </p>
+          <Users className="w-3.5 h-3.5" />
+          <span>Diary</span>
+          <span className="w-4 h-4 rounded-full bg-[#D34E2A] text-white flex items-center justify-center text-[10px] font-bold">
+            {connections.length}
+          </span>
+        </button>
       </div>
 
       {/* Metrics Bar */}
@@ -132,6 +152,11 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
             {evalResult.completionPercentage}%
           </div>
         </div>
+      </div>
+
+      {/* B-I-N-G-O Strike Tracker (Each completed line cuts B, then I, then N, then G, then O) */}
+      <div className="mb-4">
+        <BingoLetterTracker completedLinesCount={evalResult.completedCount} />
       </div>
 
       {/* Progress Bar */}
@@ -246,18 +271,23 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
         />
       )}
 
-      {/* Line completed celebration notification */}
+      {/* Line completed celebration notification with B-I-N-G-O strike announcement */}
       {newlyCompletedLines.length > 0 && (
         <BingoSuccessNotification
           newlyCompletedLines={newlyCompletedLines}
-          onDismiss={() => setNewlyCompletedLines([])}
+          totalCompletedLinesCount={evalResult.completedCount}
+          newlyCutLetters={notificationCutLetters}
+          onDismiss={() => {
+            setNewlyCompletedLines([]);
+            setNotificationCutLetters([]);
+          }}
         />
       )}
 
       {/* Quick view of already completed letter */}
       {viewCompletedLetter && connectionByLetter.get(viewCompletedLetter) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B3B3D]/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xs w-full p-5 space-y-4 shadow-2xl border border-[#A3C4CB]/40">
+          <div className="bg-white rounded-3xl max-w-xs w-full p-5 space-y-3.5 shadow-2xl border border-[#A3C4CB]/40">
             {(() => {
               const c = connectionByLetter.get(viewCompletedLetter)!;
               return (
@@ -273,17 +303,24 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                     </div>
                     <button
                       onClick={() => setViewCompletedLetter(null)}
-                      className="text-[#0B3B3D]/50 hover:text-[#0B3B3D] p-1"
+                      className="text-[#0B3B3D]/50 hover:text-[#0B3B3D] p-1 rounded-full hover:bg-[#F4F8F9]"
+                      aria-label="Close"
                     >
                       ✕
                     </button>
                   </div>
 
-                  <img
-                    src={c.selfie_url}
-                    alt={c.person_name}
-                    className="w-full aspect-square rounded-2xl object-cover border border-[#E05A47]/20"
-                  />
+                  <div className="relative rounded-2xl overflow-hidden aspect-square border border-[#E05A47]/20">
+                    <img
+                      src={c.selfie_url}
+                      alt={c.person_name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1.5">
+                      <Smartphone className="w-3 h-3 text-[#A3C4CB] shrink-0" />
+                      <span className="truncate">Stored on your device only</span>
+                    </div>
+                  </div>
 
                   <div className="space-y-1 text-xs">
                     <p className="font-semibold text-[#0B3B3D]">Q: {c.random_question}</p>
@@ -292,12 +329,26 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => setViewCompletedLetter(null)}
-                    className="w-full py-2.5 rounded-xl bg-[#E05A47] text-white text-xs font-semibold"
-                  >
-                    Close
-                  </button>
+                  <div className="space-y-2 pt-1">
+                    <button
+                      onClick={async () => {
+                        await savePhotoToPhoneDevice(c.selfie_url, c.bingo_letter, c.person_name);
+                        setSavedLocallyToast(true);
+                        setTimeout(() => setSavedLocallyToast(false), 2500);
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{savedLocallyToast ? 'Saved to Your Phone!' : 'Save Photo to Phone'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setViewCompletedLetter(null)}
+                      className="w-full py-2.5 rounded-xl bg-[#E05A47] text-white text-xs font-semibold cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </>
               );
             })()}

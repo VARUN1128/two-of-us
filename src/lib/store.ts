@@ -136,16 +136,20 @@ export class AppDataStore {
           .single();
 
         if (error) {
-          console.error('Supabase registration error:', error);
-          return { success: false, error: error.message };
+          console.warn('Supabase registration error (table may not be initialized yet):', error);
+          if (error.message?.includes('schema cache') || error.code === 'PGRST205') {
+            console.warn('Supabase tables not initialized yet in SQL Editor. Falling back to local device storage.');
+          } else {
+            return { success: false, error: error.message };
+          }
+        } else if (data) {
+          localStorage.setItem(SESSION_PARTICIPANT_KEY, data.id);
+          // Also keep local fallback in sync
+          const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+          setLocal(LOCAL_PARTICIPANTS_KEY, [...localList.filter(p => p.id !== data.id), data]);
+
+          return { success: true, participant: data };
         }
-
-        localStorage.setItem(SESSION_PARTICIPANT_KEY, data.id);
-        // Also keep local fallback in sync
-        const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
-        setLocal(LOCAL_PARTICIPANTS_KEY, [...localList.filter(p => p.id !== data.id), data]);
-
-        return { success: true, participant: data };
       } catch (err: unknown) {
         console.error('Error during Supabase registration, falling back to local store:', err);
       }
@@ -416,40 +420,16 @@ export class AppDataStore {
   }
 
   /**
-   * Upload selfie image (to Supabase Storage or returns compressed base64 data URL)
+   * Process selfie image locally on the user's device
+   * Note: Photos are stored directly on the user's phone and NOT uploaded to external databases or Supabase storage!
    */
   static async uploadSelfie(
-    participantId: string,
-    letter: string,
+    _participantId: string,
+    _letter: string,
     imageSource: File | string
   ): Promise<string> {
     const compressed = await compressImage(imageSource);
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const fileName = `${participantId}/${letter}_${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage
-          .from('two-of-us-selfies')
-          .upload(fileName, compressed.blob, {
-            contentType: 'image/jpeg',
-            upsert: true,
-          });
-
-        if (!uploadError) {
-          const { data: publicData } = supabase.storage
-            .from('two-of-us-selfies')
-            .getPublicUrl(fileName);
-
-          if (publicData?.publicUrl) {
-            return publicData.publicUrl;
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase storage upload error, falling back to data URL:', err);
-      }
-    }
-
-    // Fallback: return high quality compressed data URL
+    // Return compressed high quality data URL for local storage on the user's phone
     return compressed.dataUrl;
   }
 
@@ -468,6 +448,10 @@ export class AppDataStore {
     connection?: BingoConnection;
     board?: BingoBoard;
     newlyCompletedLines: WinningLine[];
+    totalCompletedLinesCount: number;
+    cutLetters: string[];
+    newlyCutLetters: string[];
+    isFullBingoWon: boolean;
     isFullBoardCompleted: boolean;
     error?: string;
   }> {
@@ -475,7 +459,16 @@ export class AppDataStore {
     const cleanName = personName.trim();
 
     if (!cleanName) {
-      return { success: false, error: "Please enter the person's first name", newlyCompletedLines: [], isFullBoardCompleted: false };
+      return { 
+        success: false, 
+        error: "Please enter the person's first name", 
+        newlyCompletedLines: [], 
+        totalCompletedLinesCount: 0,
+        cutLetters: [],
+        newlyCutLetters: [],
+        isFullBingoWon: false,
+        isFullBoardCompleted: false 
+      };
     }
 
     // Validate that the name starts with the selected letter
@@ -484,12 +477,25 @@ export class AppDataStore {
         success: false,
         error: `Name "${cleanName}" does not start with letter "${cleanLetter}"!`,
         newlyCompletedLines: [],
+        totalCompletedLinesCount: 0,
+        cutLetters: [],
+        newlyCutLetters: [],
+        isFullBingoWon: false,
         isFullBoardCompleted: false,
       };
     }
 
     if (!questionAnswer.trim()) {
-      return { success: false, error: 'Please enter their answer to the question', newlyCompletedLines: [], isFullBoardCompleted: false };
+      return { 
+        success: false, 
+        error: 'Please enter their answer to the question', 
+        newlyCompletedLines: [], 
+        totalCompletedLinesCount: 0,
+        cutLetters: [],
+        newlyCutLetters: [],
+        isFullBingoWon: false,
+        isFullBoardCompleted: false 
+      };
     }
 
     const board = await this.getOrCreateBingoBoard(participantId);
@@ -500,11 +506,15 @@ export class AppDataStore {
         success: false,
         error: `Letter "${cleanLetter}" is already completed on your board.`,
         newlyCompletedLines: [],
+        totalCompletedLinesCount: 0,
+        cutLetters: [],
+        newlyCutLetters: [],
+        isFullBingoWon: false,
         isFullBoardCompleted: false,
       };
     }
 
-    // Compress & upload selfie
+    // Compress selfie for local phone viewing only (never uploaded to DB)
     let selfieUrl: string;
     try {
       selfieUrl = await this.uploadSelfie(participantId, cleanLetter, selfieImageSource);
@@ -514,6 +524,10 @@ export class AppDataStore {
         success: false,
         error: 'Failed to process selfie image. Please try again.',
         newlyCompletedLines: [],
+        totalCompletedLinesCount: 0,
+        cutLetters: [],
+        newlyCutLetters: [],
+        isFullBingoWon: false,
         isFullBoardCompleted: false,
       };
     }
@@ -542,17 +556,37 @@ export class AppDataStore {
     const currentCompletedLineIds = evalResult.completedLines.map(l => l.id);
     setLocal(`${LOCAL_COMPLETED_LINES_KEY}_${participantId}`, currentCompletedLineIds);
 
-    // Persist to Supabase if configured
+    // Persist to Supabase if configured:
+    // Important: The photo is stored strictly on the user's phone and NOT uploaded to the database!
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('bingo_connections').insert([newConnection]);
-        await supabase
-          .from('bingo_boards')
-          .update({
-            completed_letters: updatedCompletedLetters,
-            completed_at: isFullCompleted ? now : board.completed_at,
-          })
-          .eq('participant_id', participantId);
+        const remoteConnectionData = {
+          id: newConnection.id,
+          participant_id: newConnection.participant_id,
+          bingo_letter: newConnection.bingo_letter,
+          person_name: newConnection.person_name,
+          selfie_url: 'stored_on_user_device', // Guarantee: No image payload/external link sent to DB
+          random_question: newConnection.random_question,
+          question_answer: newConnection.question_answer,
+          created_at: newConnection.created_at,
+        };
+
+        // Non-blocking sync with timeout so gameplay stays instantaneous even before SQL migration is executed
+        Promise.race([
+          supabase.from('bingo_connections').insert([remoteConnectionData]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase sync timeout')), 2500)),
+        ]).catch((e) => console.warn('Supabase connection sync skipped/timeout:', e));
+
+        Promise.race([
+          supabase
+            .from('bingo_boards')
+            .update({
+              completed_letters: updatedCompletedLetters,
+              completed_at: isFullCompleted ? now : board.completed_at,
+            })
+            .eq('participant_id', participantId),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase sync timeout')), 2500)),
+        ]).catch((e) => console.warn('Supabase board sync skipped/timeout:', e));
       } catch (e) {
         console.warn('Supabase connection save error:', e);
       }
@@ -582,6 +616,10 @@ export class AppDataStore {
       connection: newConnection,
       board: updatedBoard,
       newlyCompletedLines: evalResult.newlyCompletedLines,
+      totalCompletedLinesCount: evalResult.completedCount,
+      cutLetters: evalResult.cutLetters,
+      newlyCutLetters: evalResult.newlyCutLetters,
+      isFullBingoWon: evalResult.isFullBingoWon,
       isFullBoardCompleted: evalResult.isFullBoardCompleted,
     };
   }

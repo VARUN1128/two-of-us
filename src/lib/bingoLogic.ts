@@ -1,5 +1,7 @@
 import type { WinningLine } from '../types';
 
+export const BINGO_SPELL = ['B', 'I', 'N', 'G', 'O'] as const;
+
 export const ALL_WINNING_LINES: WinningLine[] = [
   // 5 Rows
   { id: 'row-0', type: 'row', index: 0, label: 'Row 1', indices: [0, 1, 2, 3, 4] },
@@ -27,6 +29,9 @@ export interface BingoCheckResult {
   peopleMet: number;
   completionPercentage: number;
   isFullBoardCompleted: boolean;
+  cutLetters: string[];
+  newlyCutLetters: string[];
+  isFullBingoWon: boolean;
 }
 
 /**
@@ -61,17 +66,34 @@ export function evaluateBingoBoard(
   const prevSet = new Set(previousCompletedLineIds);
   const newlyCompletedLines = completedLines.filter(line => !prevSet.has(line.id));
 
+  const prevCount = previousCompletedLineIds.length;
+  const currentCount = completedLines.length;
+
+  // Strikethrough B-I-N-G-O letters:
+  // 1 line completed -> 'B' cut
+  // 2 lines completed -> 'B', 'I' cut
+  // 3 lines completed -> 'B', 'I', 'N' cut
+  // 4 lines completed -> 'B', 'I', 'N', 'G' cut
+  // 5+ lines completed -> 'B', 'I', 'N', 'G', 'O' ALL CUT (FULL BINGO!)
+  const cutLetters: string[] = BINGO_SPELL.slice(0, Math.min(5, currentCount));
+  const prevCutLetters: string[] = BINGO_SPELL.slice(0, Math.min(5, prevCount));
+  const newlyCutLetters: string[] = cutLetters.filter(l => !prevCutLetters.includes(l));
+
   const peopleMet = completedSet.size;
   const completionPercentage = Math.round((peopleMet / 25) * 100);
   const isFullBoardCompleted = peopleMet >= 25;
+  const isFullBingoWon = currentCount >= 5;
 
   return {
     completedLines,
-    completedCount: completedLines.length,
+    completedCount: currentCount,
     newlyCompletedLines,
     peopleMet,
     completionPercentage,
     isFullBoardCompleted,
+    cutLetters,
+    newlyCutLetters,
+    isFullBingoWon,
   };
 }
 

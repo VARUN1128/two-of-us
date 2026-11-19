@@ -19,14 +19,14 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   onSignOut,
 }) => {
-  // On welcome page, hide logo and icon in top left and right corners as requested
-  if (stage === 'welcome') {
+  // On welcome page and bingo board, hide the top header as requested
+  if (stage === 'welcome' || stage === 'bingo') {
     return null;
   }
 
   const showConnections =
     participant &&
-    (stage === 'bingo' || stage === 'connections' || stage === 'board_completed');
+    (stage === 'connections' || stage === 'board_completed');
 
   return (
     <header className="sticky top-0 z-40 w-full px-5 py-3.5 transition-all bg-transparent">
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Action buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           {showConnections && stage !== 'connections' && (
             <button
               onClick={() => onNavigate('connections')}

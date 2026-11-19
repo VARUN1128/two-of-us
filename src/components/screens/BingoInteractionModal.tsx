@@ -9,8 +9,13 @@ import {
   ArrowRight, 
   RotateCw, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Download,
+  Smartphone,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
+import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
 
 interface BingoInteractionModalProps {
   isOpen: boolean;
@@ -53,6 +58,15 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
   // Validation & Submission
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedToPhone, setSavedToPhone] = useState(false);
+
+  const handleManualSaveToPhone = async () => {
+    if (!selfieSource) return;
+    const source = selfieFile || selfieSource;
+    await savePhotoToPhoneDevice(source, letter, personName);
+    setSavedToPhone(true);
+    setTimeout(() => setSavedToPhone(false), 2500);
+  };
 
   // Pick or load fixed random question for this letter session
   useEffect(() => {
@@ -219,6 +233,14 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
     setErrorMsg(null);
 
     const source = selfieFile || selfieSource;
+
+    // Automatically trigger saving the selfie directly into the user's phone files/photos
+    try {
+      await savePhotoToPhoneDevice(source, letter, personName);
+    } catch (e) {
+      console.warn('Auto-save to phone non-fatal error:', e);
+    }
+
     const result = await onSubmit({
       letter: letter.toUpperCase(),
       personName: personName.trim(),
@@ -382,15 +404,27 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                       alt="Selfie preview"
                       className="w-full h-full object-cover"
                     />
-                    <button
-                      onClick={() => {
-                        setSelfieSource(null);
-                        setSelfieFile(null);
-                      }}
-                      className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium hover:bg-black/80"
-                    >
-                      Retake
-                    </button>
+                    <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleManualSaveToPhone}
+                        className="px-2.5 py-1 rounded-full bg-white/90 text-[#D34E2A] hover:bg-white text-[11px] font-semibold flex items-center gap-1 shadow-sm"
+                        title="Save to Phone"
+                      >
+                        {savedToPhone ? <Check className="w-3 h-3 text-green-600" /> : <Download className="w-3 h-3" />}
+                        <span>{savedToPhone ? 'Saved!' : 'Save to Phone'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelfieSource(null);
+                          setSelfieFile(null);
+                        }}
+                        className="px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium hover:bg-black/80"
+                      >
+                        Retake
+                      </button>
+                    </div>
                   </div>
                 ) : isCameraActive ? (
                   <div className="relative w-full h-full">
@@ -468,6 +502,14 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 className="hidden"
                 onChange={handleGalleryUpload}
               />
+
+              {/* Privacy Notice: Stored on user's phone, not in DB */}
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FDF2F0] border border-[#F3BEB5]/60 text-xs text-[#D34E2A]">
+                <Smartphone className="w-4 h-4 shrink-0" />
+                <span>
+                  <strong>Stored on your phone:</strong> Photos are saved to your device and never uploaded to our servers or database.
+                </span>
+              </div>
 
               {/* Mandatory Consent Checkbox */}
               <div
@@ -643,6 +685,12 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     "{questionAnswer}"
                   </div>
                 </div>
+              </div>
+
+              {/* Privacy badge */}
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F4F8F9] border border-[#A3C4CB]/40 text-xs text-[#0B3B3D]/80">
+                <ShieldCheck className="w-4 h-4 text-[#D34E2A] shrink-0" />
+                <span>Selfie is saved directly to your phone • Zero database or server upload</span>
               </div>
 
               {/* Final Submit Actions */}

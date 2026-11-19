@@ -75,15 +75,19 @@ const evalAntiDiag = evaluateBingoBoard(sampleBoard, antiDiagLetters);
 assert(evalAntiDiag.completedCount === 1, 'Anti diagonal completion detected as 1 winning line');
 assert(evalAntiDiag.completedLines[0].id === 'diag-anti', 'Completed line identified as diag-anti');
 
-// 10. Newly Completed Line Detection Test (for Celebration Trigger)
+// 10. Newly Completed Line Detection & B-I-N-G-O Strikeout Test
 const evalWithPrev = evaluateBingoBoard(sampleBoard, row0Letters, ['row-0']);
 assert(evalWithPrev.newlyCompletedLines.length === 0, 'Already completed row not flagged as newly completed');
+assert(evalRow0.cutLetters.length === 1 && evalRow0.cutLetters[0] === 'B', '1 completed line strikes off letter B');
+assert(evalRow0.newlyCutLetters.length === 1 && evalRow0.newlyCutLetters[0] === 'B', 'Newly cut letter is B');
 
 // If user now completes col 0 in addition to row 0:
 const lettersRow0AndCol0 = Array.from(new Set([...row0Letters, sampleBoard[5], sampleBoard[10], sampleBoard[15], sampleBoard[20]]));
 const evalMultiple = evaluateBingoBoard(sampleBoard, lettersRow0AndCol0, ['row-0']);
 assert(evalMultiple.completedCount === 2, 'Two winning lines completed (Row 0 + Col 0)');
 assert(evalMultiple.newlyCompletedLines.length === 1 && evalMultiple.newlyCompletedLines[0].id === 'col-0', 'Only newly completed Col 0 triggers new line celebration');
+assert(evalMultiple.cutLetters.join('') === 'BI', '2 completed lines strike off letters B and I');
+assert(evalMultiple.newlyCutLetters.join('') === 'I', 'Second line completion newly strikes off letter I');
 
 // 11. Full Board Completion Test (All 25 letters)
 const evalFull = evaluateBingoBoard(sampleBoard, sampleBoard);
@@ -91,6 +95,8 @@ assert(evalFull.completedCount === 12, 'Full board completes all 12 winning line
 assert(evalFull.isFullBoardCompleted, 'Full board completion flag is TRUE');
 assert(evalFull.peopleMet === 25, 'People met is 25');
 assert(evalFull.completionPercentage === 100, 'Completion percentage is 100%');
+assert(evalFull.cutLetters.join('') === 'BINGO', 'All 5 B-I-N-G-O letters are struck out');
+assert(evalFull.isFullBingoWon === true, 'isFullBingoWon is TRUE when >= 5 lines completed');
 
 // 12. Winning Cell Indices calculation
 const winningCells = getWinningCellIndices(sampleBoard, row0Letters);

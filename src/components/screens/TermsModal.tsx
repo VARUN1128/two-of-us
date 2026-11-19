@@ -62,13 +62,13 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
               2. Consent to Photography & Selfies
             </h4>
             <p>
-              Completing your Human Bingo board requires taking selfies with other event attendees. By playing, you consent to being photographed by other players and appearing in their in-app selfie submissions.
+              Completing your Human Bingo board requires taking selfies with other event attendees. By playing, you consent to being photographed by other players and appearing in their selfie memories.
             </p>
             <p className="p-3 bg-[#FDF2F0] rounded-xl text-xs text-[#0B3B3D] border border-[#E05A47]/20">
-              <strong>Golden Rule:</strong> Never take or upload a selfie with someone who hasn't clearly agreed to it. Always ask first.
+              <strong>Device Storage Guarantee:</strong> All connection photos are stored directly on the attendee's personal phone and are <strong>never uploaded to our database or remote servers</strong>.
             </p>
             <p className="text-xs text-[#0B3B3D]/75">
-              Organizers may use anonymized, aggregate gameplay highlights for event recaps or marketing; this strictly excludes your private selfies and is opt-out at registration.
+              <strong>Golden Rule:</strong> Never take a selfie with someone who hasn't clearly agreed to it. Always ask first.
             </p>
           </section>
 

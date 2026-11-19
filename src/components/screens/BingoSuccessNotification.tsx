@@ -1,29 +1,37 @@
 import React, { useEffect } from 'react';
 import type { WinningLine } from '../../types';
-import { Trophy, Sparkles, X } from 'lucide-react';
+import { Trophy, Sparkles, X, Scissors, Award } from 'lucide-react';
 import { fireBingoConfetti } from '../common/Confetti';
+import { BINGO_SPELL } from '../../lib/bingoLogic';
 
 interface BingoSuccessNotificationProps {
   newlyCompletedLines: WinningLine[];
+  totalCompletedLinesCount: number;
+  newlyCutLetters?: string[];
   onDismiss: () => void;
 }
 
 export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> = ({
   newlyCompletedLines,
+  totalCompletedLinesCount,
+  newlyCutLetters = [],
   onDismiss,
 }) => {
+  const cutCount = Math.min(5, Math.max(0, totalCompletedLinesCount));
+  const isFullBingoNow = totalCompletedLinesCount >= 5;
+
   useEffect(() => {
     if (newlyCompletedLines.length > 0) {
-      fireBingoConfetti(false);
+      fireBingoConfetti(isFullBingoNow);
     }
-  }, [newlyCompletedLines]);
+  }, [newlyCompletedLines, isFullBingoNow]);
 
   if (!newlyCompletedLines || newlyCompletedLines.length === 0) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B3B3D]/70 backdrop-blur-xs animate-in zoom-in-90 fade-in duration-300">
       <div 
-        className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-2 border-[#E05A47] space-y-5 relative overflow-hidden"
+        className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-2 border-[#E05A47] space-y-4 relative overflow-hidden"
         role="alertdialog"
         aria-modal="true"
       >
@@ -34,41 +42,90 @@ export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> =
         {/* Close icon */}
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 text-[#0B3B3D]/50 hover:text-[#0B3B3D] p-1 rounded-full hover:bg-[#F4F8F9]"
+          className="absolute top-4 right-4 text-[#0B3B3D]/50 hover:text-[#0B3B3D] p-1 rounded-full hover:bg-[#F4F8F9] transition-colors"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Trophy icon with animated pulse */}
+        {/* Animated Trophy / Award Badge */}
         <div className="w-16 h-16 rounded-full bg-[#FDF2F0] border-2 border-[#E05A47] flex items-center justify-center text-[#E05A47] mx-auto animate-pulse-subtle shadow-md">
-          <Trophy className="w-8 h-8 fill-[#E05A47]/20" />
+          {isFullBingoNow ? (
+            <Trophy className="w-8 h-8 fill-[#E05A47]/20" />
+          ) : (
+            <Award className="w-8 h-8 fill-[#E05A47]/20" />
+          )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDF2F0] text-xs font-bold text-[#E05A47] uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Winning Line Detected</span>
+            <span>Winning Line Completed</span>
           </div>
 
           <h3 
-            className="text-3xl font-bold text-[#0B3B3D] tracking-tight"
+            className="text-2xl sm:text-3xl font-bold text-[#0B3B3D] tracking-tight"
             style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
           >
-            You've got BINGO!
+            {isFullBingoNow ? "Full B-I-N-G-O!" : "You've got a Line!"}
           </h3>
 
           <p className="text-xs text-[#0B3B3D]/80 font-sans">
-            Congratulations! You connected 5 people in a row:
+            {newlyCutLetters.length > 0 ? (
+              <span>
+                Letter <strong className="text-[#D34E2A] text-sm font-bold">'{newlyCutLetters.join("', '")}'</strong> in BINGO is now struck off!
+              </span>
+            ) : (
+              <span>You completed 5 connections in a line!</span>
+            )}
           </p>
         </div>
 
+        {/* Visual 5-Letter B-I-N-G-O Strike Preview */}
+        <div className="p-3 rounded-2xl bg-[#F4F8F9] border border-[#A3C4CB]/30">
+          <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-[#0B3B3D]/70 mb-2">
+            <Scissors className="w-3 h-3 text-[#E05A47]" />
+            <span>B-I-N-G-O Progress</span>
+          </div>
+          <div className="grid grid-cols-5 gap-1.5">
+            {BINGO_SPELL.map((char, i) => {
+              const isCut = i < cutCount;
+              const isJustCut = newlyCutLetters.includes(char);
+
+              return (
+                <div
+                  key={char}
+                  className={`relative p-1.5 rounded-xl flex flex-col items-center justify-center ${
+                    isCut
+                      ? 'bg-[#FDF2F0] border border-[#E05A47] text-[#D34E2A] font-bold'
+                      : 'bg-white border border-[#A3C4CB]/40 text-[#0B3B3D]/50 font-medium'
+                  } ${isJustCut ? 'ring-2 ring-[#E05A47] scale-105' : ''}`}
+                >
+                  <span
+                    className="font-serif text-lg leading-none"
+                    style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+                  >
+                    {char}
+                  </span>
+                  {isCut && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <svg viewBox="0 0 100 100" className="w-full h-full text-[#D34E2A]" preserveAspectRatio="none">
+                        <line x1="15" y1="85" x2="85" y2="15" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Completed line pills */}
-        <div className="flex flex-wrap gap-2 justify-center py-1">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           {newlyCompletedLines.map((line) => (
             <span
               key={line.id}
-              className="px-3.5 py-1.5 rounded-full bg-[#E05A47] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5"
+              className="px-3 py-1 rounded-full bg-[#E05A47] text-white text-[11px] font-semibold shadow-2xs flex items-center gap-1"
             >
               <Sparkles className="w-3 h-3 text-white" />
               <span>{line.label} Completed</span>

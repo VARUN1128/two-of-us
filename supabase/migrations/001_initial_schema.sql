@@ -1,6 +1,8 @@
 -- ====================================================================
--- TWO OF US: Database Schema & Row Level Security Setup
+-- TWO OF US: Production Database Schema & Row Level Security Setup
 -- ====================================================================
+-- Safe for first-time execution in Supabase SQL Editor.
+-- Idempotent: can be executed multiple times without errors.
 
 -- 1. Enable pgcrypto for UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -45,12 +47,13 @@ CREATE TABLE IF NOT EXISTS public.bingo_boards (
 CREATE INDEX IF NOT EXISTS idx_bingo_boards_participant ON public.bingo_boards (participant_id);
 
 -- 5. Bingo Connections Table
+-- NOTE: Selfies are stored locally on the user's phone, so selfie_url defaults to 'stored_on_user_device'
 CREATE TABLE IF NOT EXISTS public.bingo_connections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     participant_id UUID NOT NULL REFERENCES public.participants(id) ON DELETE CASCADE,
     bingo_letter TEXT NOT NULL,
     person_name TEXT NOT NULL,
-    selfie_url TEXT NOT NULL,
+    selfie_url TEXT DEFAULT 'stored_on_user_device',
     random_question TEXT NOT NULL,
     question_answer TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -62,7 +65,7 @@ CREATE INDEX IF NOT EXISTS idx_bingo_connections_participant ON public.bingo_con
 -- 6. Event Settings Table
 CREATE TABLE IF NOT EXISTS public.event_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_name TEXT NOT NULL DEFAULT 'Two of Us Live',
+    event_name TEXT NOT NULL DEFAULT 'Two of Us Live Event',
     event_status TEXT NOT NULL DEFAULT 'active',
     registration_enabled BOOLEAN NOT NULL DEFAULT true,
     bingo_enabled BOOLEAN NOT NULL DEFAULT true,
@@ -77,6 +80,7 @@ WHERE NOT EXISTS (SELECT 1 FROM public.event_settings LIMIT 1);
 
 -- ====================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
+-- Idempotent: DROP POLICY IF EXISTS before CREATE POLICY prevents errors
 -- ====================================================================
 
 ALTER TABLE public.participants ENABLE ROW LEVEL SECURITY;
@@ -85,60 +89,68 @@ ALTER TABLE public.bingo_boards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bingo_connections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.event_settings ENABLE ROW LEVEL SECURITY;
 
--- Allow public read of event settings
+-- 1) Event Settings Policies
+DROP POLICY IF EXISTS "Public can view event settings" ON public.event_settings;
 CREATE POLICY "Public can view event settings" 
 ON public.event_settings FOR SELECT USING (true);
 
--- Allow participants insert (registration)
+-- 2) Participants Policies
+DROP POLICY IF EXISTS "Anyone can register as a participant" ON public.participants;
 CREATE POLICY "Anyone can register as a participant" 
 ON public.participants FOR INSERT WITH CHECK (true);
 
--- Allow reading participant by id or matching session
+DROP POLICY IF EXISTS "Participants can view own profile" ON public.participants;
 CREATE POLICY "Participants can view own profile" 
 ON public.participants FOR SELECT USING (true);
 
--- Allow participant update (for questionnaire completion)
+DROP POLICY IF EXISTS "Participants can update own profile" ON public.participants;
 CREATE POLICY "Participants can update own profile" 
 ON public.participants FOR UPDATE USING (true);
 
--- Questionnaire answers policies
+-- 3) Questionnaire Answers Policies
+DROP POLICY IF EXISTS "Anyone can insert questionnaire answers" ON public.questionnaire_answers;
 CREATE POLICY "Anyone can insert questionnaire answers" 
 ON public.questionnaire_answers FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Participants can view own questionnaire answers" ON public.questionnaire_answers;
 CREATE POLICY "Participants can view own questionnaire answers" 
 ON public.questionnaire_answers FOR SELECT USING (true);
 
--- Bingo boards policies
+-- 4) Bingo Boards Policies
+DROP POLICY IF EXISTS "Participants can insert own board" ON public.bingo_boards;
 CREATE POLICY "Participants can insert own board" 
 ON public.bingo_boards FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Participants can update own board" ON public.bingo_boards;
 CREATE POLICY "Participants can update own board" 
 ON public.bingo_boards FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Participants can view own board" ON public.bingo_boards;
 CREATE POLICY "Participants can view own board" 
 ON public.bingo_boards FOR SELECT USING (true);
 
--- Bingo connections policies
+-- 5) Bingo Connections Policies
+DROP POLICY IF EXISTS "Participants can insert own connections" ON public.bingo_connections;
 CREATE POLICY "Participants can insert own connections" 
 ON public.bingo_connections FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Participants can view own connections" ON public.bingo_connections;
 CREATE POLICY "Participants can view own connections" 
 ON public.bingo_connections FOR SELECT USING (true);
 
 -- ====================================================================
--- STORAGE BUCKET CONFIGURATION
+-- OPTIONAL STORAGE BUCKET (Photos are kept on user phones, so bucket is optional)
+-- Safe block: does not fail if storage schema permissions are restricted
 -- ====================================================================
-
--- Insert storage bucket for selfies if not exists
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('two-of-us-selfies', 'two-of-us-selfies', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Storage policies for selfies bucket
-CREATE POLICY "Allow public upload to selfies bucket"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'two-of-us-selfies');
-
-CREATE POLICY "Allow public read from selfies bucket"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'two-of-us-selfies');
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'storage') THEN
+        INSERT INTO storage.buckets (id, name, public)
+        VALUES ('two-of-us-selfies', 'two-of-us-selfies', true)
+        ON CONFLICT (id) DO NOTHING;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Non-fatal: selfies are saved to user phone storage directly
+        NULL;
+END $$;
