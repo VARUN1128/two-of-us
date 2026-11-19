@@ -121,10 +121,12 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
         {/* Full Name */}
         <div>
           <label className="block text-xs font-semibold text-[#0B3B3D] mb-1.5">
-            Full Name <span className="text-[#E05A47]">*</span>
+            Full Name <span className="text-[#D34E2A]">*</span>
           </label>
-          <div className="relative">
-            <User className="w-4 h-4 absolute left-3.5 top-3 text-[#E05A47]" />
+          <div className="relative flex items-center">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none select-none text-[#D34E2A]">
+              <User className="w-4 h-4" />
+            </div>
             <input
               type="text"
               placeholder="e.g. Ananya Sharma"
@@ -136,7 +138,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
               className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] transition-all focus:outline-none ${
                 errors.fullName
                   ? 'border-red-400 focus:ring-1 focus:ring-red-400'
-                  : 'border-[#A3C4CB]/60 focus:border-[#E05A47]'
+                  : 'border-[#A3C4CB]/60 focus:border-[#D34E2A]'
               }`}
               required
             />
@@ -150,14 +152,16 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="text-xs font-semibold text-[#0B3B3D]">
-              Mobile Number (India) <span className="text-[#E05A47]">*</span>
+              Mobile Number (India) <span className="text-[#D34E2A]">*</span>
             </label>
-            <span className="text-[10px] text-[#E05A47] font-medium">Never shared publicly</span>
+            <span className="text-[10px] text-[#D34E2A] font-medium">Never shared publicly</span>
           </div>
-          <div className="relative">
-            <Phone className="w-4 h-4 absolute left-3.5 top-3 text-[#E05A47]" />
-            <div className="absolute left-9 top-2.5 text-xs font-medium text-[#0B3B3D]/60 select-none">
-              +91
+          <div className="relative flex items-center">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center gap-1.5 pointer-events-none select-none z-10">
+              <Phone className="w-4 h-4 text-[#D34E2A]" />
+              <span className="text-xs font-semibold text-[#122B32]/75 pr-2 border-r border-[#A3C4CB]/60">
+                +91
+              </span>
             </div>
             <input
               type="tel"
@@ -167,12 +171,12 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
                 setMobileNumber(e.target.value);
                 if (errors.mobileNumber) setErrors({ ...errors, mobileNumber: undefined });
               }}
-              className={`w-full pl-17 pr-3.5 py-2.5 rounded-xl border bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] transition-all focus:outline-none ${
+              className={`w-full pl-20 pr-3.5 py-2.5 rounded-xl border bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] transition-all focus:outline-none ${
                 errors.mobileNumber
                   ? 'border-red-400 focus:ring-1 focus:ring-red-400'
-                  : 'border-[#A3C4CB]/60 focus:border-[#E05A47]'
+                  : 'border-[#A3C4CB]/60 focus:border-[#D34E2A]'
               }`}
-              maxLength={12}
+              maxLength={10}
               required
             />
           </div>
@@ -184,14 +188,16 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
         {/* Instagram ID */}
         <div>
           <label className="block text-xs font-semibold text-[#0B3B3D] mb-1.5">
-            Instagram Handle <span className="text-[#E05A47]">*</span>
+            Instagram Handle <span className="text-[#D34E2A]">*</span>
           </label>
-          <div className="relative">
-            <svg className="w-4 h-4 absolute left-3.5 top-3 text-[#E05A47]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-            </svg>
+          <div className="relative flex items-center">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none select-none text-[#D34E2A]">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
+            </div>
             <input
               type="text"
               placeholder="@yourhandle"
@@ -203,7 +209,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
               className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] transition-all focus:outline-none ${
                 errors.instagramId
                   ? 'border-red-400 focus:ring-1 focus:ring-red-400'
-                  : 'border-[#A3C4CB]/60 focus:border-[#E05A47]'
+                  : 'border-[#A3C4CB]/60 focus:border-[#D34E2A]'
               }`}
               required
             />
