@@ -214,7 +214,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-[#0B3B3D] antialiased selection:bg-[#A3C4CB]/30 selection:text-[#0B3B3D]">
+    <div className={`min-h-screen flex flex-col ${stage === 'welcome' ? 'bg-[#FDF8F4]' : 'bg-white'} text-[#0B3B3D] antialiased selection:bg-[#F3BEB5]/30 selection:text-[#0B3B3D]`}>
       {/* Navigation Header */}
       <Header
         stage={stage}
