@@ -105,7 +105,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
       <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#F4F8F9] border border-[#A3C4CB]/40 mb-4 shadow-2xs">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] text-[#0B3B3D]/70 font-medium">
-            <Users className="w-3 h-3 text-[#088F87]" />
+            <Users className="w-3 h-3 text-[#E05A47]" />
             <span>People Met</span>
           </div>
           <div className="text-lg font-bold text-[#0B3B3D] mt-0.5">
@@ -115,17 +115,17 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
 
         <div className="text-center border-x border-[#A3C4CB]/30">
           <div className="flex items-center justify-center gap-1 text-[11px] text-[#0B3B3D]/70 font-medium">
-            <Award className="w-3 h-3 text-[#088F87]" />
+            <Award className="w-3 h-3 text-[#E05A47]" />
             <span>Bingo Lines</span>
           </div>
-          <div className="text-lg font-bold text-[#088F87] mt-0.5">
+          <div className="text-lg font-bold text-[#E05A47] mt-0.5">
             {evalResult.completedCount} <span className="text-xs text-[#0B3B3D]/50 font-normal">/ 12</span>
           </div>
         </div>
 
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] text-[#0B3B3D]/70 font-medium">
-            <Trophy className="w-3 h-3 text-[#088F87]" />
+            <Trophy className="w-3 h-3 text-[#E05A47]" />
             <span>Completed</span>
           </div>
           <div className="text-lg font-bold text-[#0B3B3D] mt-0.5">
@@ -158,9 +158,9 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                 className={`relative rounded-2xl flex flex-col items-center justify-center aspect-square transition-all duration-200 select-none cursor-pointer active:scale-95 group ${
                   isCompleted
                     ? isWinningCell
-                      ? 'bg-[#088F87] text-white shadow-md ring-2 ring-[#088F87] ring-offset-1 ring-offset-white'
-                      : 'bg-[#088F87] text-white shadow-xs'
-                    : 'bg-white hover:bg-[#E6F6F5] text-[#0B3B3D] border border-[#A3C4CB]/60 hover:border-[#088F87]'
+                      ? 'bg-[#E05A47] text-white shadow-md ring-2 ring-[#E05A47] ring-offset-1 ring-offset-white'
+                      : 'bg-[#E05A47] text-white shadow-xs'
+                    : 'bg-white hover:bg-[#FDF2F0] text-[#0B3B3D] border border-[#A3C4CB]/60 hover:border-[#E05A47]'
                 }`}
                 title={
                   isCompleted && connection
@@ -182,19 +182,19 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                         {connection.person_name.split(' ')[0]}
                       </span>
                     )}
-                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white text-[#088F87] flex items-center justify-center">
+                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white text-[#E05A47] flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center">
                     <span 
-                      className="font-serif text-2xl sm:text-3xl font-semibold text-[#0B3B3D] group-hover:text-[#088F87] transition-colors"
+                      className="font-serif text-2xl sm:text-3xl font-semibold text-[#0B3B3D] group-hover:text-[#E05A47] transition-colors"
                       style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
                     >
                       {letter}
                     </span>
-                    <span className="text-[8px] uppercase tracking-wider text-[#A3C4CB] font-sans font-medium group-hover:text-[#088F87]">
+                    <span className="text-[8px] uppercase tracking-wider text-[#A3C4CB] font-sans font-medium group-hover:text-[#E05A47]">
                       Tap
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
         {evalResult.isFullBoardCompleted ? (
           <button
             onClick={onFullBoardCompleted}
-            className="w-full py-3.5 px-5 rounded-2xl bg-[#088F87] hover:bg-[#06726B] text-white text-sm font-semibold shadow-md flex items-center justify-center gap-2 animate-bounce cursor-pointer"
+            className="w-full py-3.5 px-5 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white text-sm font-semibold shadow-md flex items-center justify-center gap-2 animate-bounce cursor-pointer"
           >
             <Trophy className="w-4 h-4" />
             <span>View Full Board Completion Celebration!</span>
@@ -220,7 +220,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
         <div className="flex items-center justify-between text-xs px-1">
           <button
             onClick={onViewConnections}
-            className="inline-flex items-center gap-1.5 font-medium text-[#088F87] hover:text-[#06726B] transition-colors py-1.5"
+            className="inline-flex items-center gap-1.5 font-medium text-[#E05A47] hover:text-[#C44633] transition-colors py-1.5"
           >
             <Users className="w-3.5 h-3.5" />
             <span>My Connections ({connections.length})</span>
@@ -264,7 +264,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                 <>
                   <div className="flex items-center justify-between border-b border-[#A3C4CB]/30 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-lg bg-[#088F87] text-white flex items-center justify-center font-serif text-sm font-bold">
+                      <span className="w-7 h-7 rounded-lg bg-[#E05A47] text-white flex items-center justify-center font-serif text-sm font-bold">
                         {viewCompletedLetter}
                       </span>
                       <span className="font-serif text-lg font-medium text-[#0B3B3D]">
@@ -282,19 +282,19 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                   <img
                     src={c.selfie_url}
                     alt={c.person_name}
-                    className="w-full aspect-square rounded-2xl object-cover border border-[#088F87]/20"
+                    className="w-full aspect-square rounded-2xl object-cover border border-[#E05A47]/20"
                   />
 
                   <div className="space-y-1 text-xs">
                     <p className="font-semibold text-[#0B3B3D]">Q: {c.random_question}</p>
-                    <p className="italic text-[#088F87] bg-[#E6F6F5] p-2.5 rounded-xl border border-[#088F87]/20">
+                    <p className="italic text-[#E05A47] bg-[#FDF2F0] p-2.5 rounded-xl border border-[#E05A47]/20">
                       "{c.question_answer}"
                     </p>
                   </div>
 
                   <button
                     onClick={() => setViewCompletedLetter(null)}
-                    className="w-full py-2.5 rounded-xl bg-[#088F87] text-white text-xs font-semibold"
+                    className="w-full py-2.5 rounded-xl bg-[#E05A47] text-white text-xs font-semibold"
                   >
                     Close
                   </button>

@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
  * Triggers brand-colored celebration confetti
  */
 export function fireBingoConfetti(isFullBoard = false) {
-  const colors = ['#088F87', '#A3C4CB', '#0B3B3D', '#FFFFFF', '#0AB3A9'];
+  const colors = ['#E05A47', '#A3C4CB', '#0B3B3D', '#FFFFFF', '#E96C5B'];
 
   if (isFullBoard) {
     // Grand celebration for full board completion

@@ -6,10 +6,19 @@
   --color-pale-blue: #A3C4CB;
   --color-pale-blue-light: #EBF2F4;
   --color-pale-blue-subtle: #F4F8F9;
-  --color-lagoon-teal: #088F87;
-  --color-lagoon-teal-dark: #06726B;
-  --color-lagoon-teal-light: #0AB3A9;
-  --color-lagoon-teal-tint: #E6F6F5;
+  
+  /* Primary Reddish-Orange Accent Tokens */
+  --color-reddish-orange: #E05A47;
+  --color-reddish-orange-dark: #C44633;
+  --color-reddish-orange-light: #E96C5B;
+  --color-reddish-orange-tint: #FDF2F0;
+
+  /* Aliases for compatibility */
+  --color-lagoon-teal: #E05A47;
+  --color-lagoon-teal-dark: #C44633;
+  --color-lagoon-teal-light: #E96C5B;
+  --color-lagoon-teal-tint: #FDF2F0;
+
   --color-pure-white: #FFFFFF;
 
   --font-serif: "Cormorant Garamond", "Playfair Display", Georgia, serif;
@@ -68,5 +77,5 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #088F87;
+  background: #E05A47;
 }

@@ -43,12 +43,12 @@ export const CompletionPage: React.FC<CompletionPageProps> = ({
       </div>
 
       <div className="my-auto py-6 space-y-6">
-        <div className="w-20 h-20 rounded-full bg-[#E6F6F5] border-2 border-[#088F87] flex items-center justify-center text-[#088F87] mx-auto shadow-lg animate-pulse-subtle">
-          <Trophy className="w-10 h-10 fill-[#088F87]/20" />
+        <div className="w-20 h-20 rounded-full bg-[#FDF2F0] border-2 border-[#E05A47] flex items-center justify-center text-[#E05A47] mx-auto shadow-lg animate-pulse-subtle">
+          <Trophy className="w-10 h-10 fill-[#E05A47]/20" />
         </div>
 
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E6F6F5] text-xs font-bold text-[#088F87] uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDF2F0] text-xs font-bold text-[#E05A47] uppercase tracking-wider">
             ★ All 25 Letters Conquered ★
           </div>
 
@@ -68,29 +68,29 @@ export const CompletionPage: React.FC<CompletionPageProps> = ({
         <div className="grid grid-cols-3 gap-2.5 p-4 rounded-2xl bg-[#F4F8F9] border border-[#A3C4CB]/40 text-left">
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-[11px] text-[#0B3B3D]/70">
-              <Users className="w-3 h-3 text-[#088F87]" />
+              <Users className="w-3 h-3 text-[#E05A47]" />
               <span>Met</span>
             </div>
             <div className="text-xl font-bold text-[#0B3B3D]">25</div>
-            <div className="text-[10px] text-[#088F87] font-medium">People</div>
+            <div className="text-[10px] text-[#E05A47] font-medium">People</div>
           </div>
 
           <div className="space-y-1 border-x border-[#A3C4CB]/30 px-2">
             <div className="flex items-center gap-1 text-[11px] text-[#0B3B3D]/70">
-              <Award className="w-3 h-3 text-[#088F87]" />
+              <Award className="w-3 h-3 text-[#E05A47]" />
               <span>Lines</span>
             </div>
             <div className="text-xl font-bold text-[#0B3B3D]">12</div>
-            <div className="text-[10px] text-[#088F87] font-medium">All 12 Bingos</div>
+            <div className="text-[10px] text-[#E05A47] font-medium">All 12 Bingos</div>
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-[11px] text-[#0B3B3D]/70">
-              <Clock className="w-3 h-3 text-[#088F87]" />
+              <Clock className="w-3 h-3 text-[#E05A47]" />
               <span>Time</span>
             </div>
             <div className="text-lg font-bold text-[#0B3B3D] truncate">{calculateDuration()}</div>
-            <div className="text-[10px] text-[#088F87] font-medium">Duration</div>
+            <div className="text-[10px] text-[#E05A47] font-medium">Duration</div>
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@ export const CompletionPage: React.FC<CompletionPageProps> = ({
       <div className="w-full pb-4 space-y-3">
         <button
           onClick={onViewConnections}
-          className="w-full py-4 px-6 rounded-2xl bg-[#088F87] hover:bg-[#06726B] text-white font-medium text-base shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
+          className="w-full py-4 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-medium text-base shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>View All Your 25 Connections</span>
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

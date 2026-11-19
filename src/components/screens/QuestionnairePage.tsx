@@ -85,7 +85,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-[#088F87] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-2 border-[#E05A47] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs text-[#0B3B3D]/70 font-sans">Loading your questionnaire...</p>
         </div>
       </div>
@@ -103,14 +103,14 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
             className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-2 -ml-2 rounded-lg transition-colors ${
               currentIndex === 0
                 ? 'opacity-0 pointer-events-none'
-                : 'text-[#0B3B3D]/70 hover:text-[#088F87] hover:bg-[#F4F8F9]'
+                : 'text-[#0B3B3D]/70 hover:text-[#E05A47] hover:bg-[#F4F8F9]'
             }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Previous</span>
           </button>
 
-          <span className="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#E6F6F5] text-[#088F87] border border-[#088F87]/20">
+          <span className="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#FDF2F0] text-[#E05A47] border border-[#E05A47]/20">
             {currentQ.category}
           </span>
 
@@ -129,7 +129,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
       {/* Center: Question and 4 Selectable Answer Cards */}
       <div className="my-auto py-6 space-y-6">
         <div className="space-y-2">
-          <div className="text-xs text-[#088F87] font-semibold tracking-wide">
+          <div className="text-xs text-[#E05A47] font-semibold tracking-wide">
             Question 0{currentQ.number}
           </div>
           <h2
@@ -151,8 +151,8 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
                 onClick={() => handleSelectOption(option)}
                 className={`group relative p-4 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] flex items-center justify-between gap-3 ${
                   isSelected
-                    ? 'bg-[#E6F6F5] border-[#088F87] shadow-xs'
-                    : 'bg-white border-[#A3C4CB]/50 hover:border-[#088F87]/60 hover:bg-[#F4F8F9]'
+                    ? 'bg-[#FDF2F0] border-[#E05A47] shadow-xs'
+                    : 'bg-white border-[#A3C4CB]/50 hover:border-[#E05A47]/60 hover:bg-[#F4F8F9]'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
@@ -160,7 +160,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
                   <span
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
                       isSelected
-                        ? 'bg-[#088F87] text-white'
+                        ? 'bg-[#E05A47] text-white'
                         : 'bg-[#F4F8F9] text-[#0B3B3D]/80 group-hover:bg-[#A3C4CB]/30'
                     }`}
                   >
@@ -179,7 +179,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
                     isSelected
-                      ? 'bg-[#088F87] border-[#088F87] text-white scale-100'
+                      ? 'bg-[#E05A47] border-[#E05A47] text-white scale-100'
                       : 'border-[#A3C4CB]/40 bg-transparent opacity-0 group-hover:opacity-40'
                   }`}
                 >
@@ -198,7 +198,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
           disabled={!currentAnswer || isSaving}
           className={`w-full py-3.5 px-6 rounded-2xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md ${
             currentAnswer && !isSaving
-              ? 'bg-[#088F87] hover:bg-[#06726B] text-white active:scale-98'
+              ? 'bg-[#E05A47] hover:bg-[#C44633] text-white active:scale-98'
               : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed shadow-none'
           }`}
         >

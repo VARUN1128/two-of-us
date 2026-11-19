@@ -36,13 +36,13 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={onBackToBingo}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B3B3D] hover:text-[#088F87] transition-colors py-1.5 px-3 rounded-full bg-[#F4F8F9] hover:bg-[#E6F6F5]"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B3B3D] hover:text-[#E05A47] transition-colors py-1.5 px-3 rounded-full bg-[#F4F8F9] hover:bg-[#FDF2F0]"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#088F87]" />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#E05A47]" />
           <span>Back to Bingo</span>
         </button>
 
-        <span className="text-xs font-medium text-[#088F87] bg-[#E6F6F5] px-3 py-1 rounded-full border border-[#088F87]/20">
+        <span className="text-xs font-medium text-[#E05A47] bg-[#FDF2F0] px-3 py-1 rounded-full border border-[#E05A47]/20">
           {connections.length} {connections.length === 1 ? 'Connection' : 'Connections'}
         </span>
       </div>
@@ -62,7 +62,7 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
       {/* Empty State */}
       {connections.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#F4F8F9] rounded-3xl border border-[#A3C4CB]/30 my-auto space-y-4">
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#088F87] shadow-xs">
+          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#E05A47] shadow-xs">
             <Users className="w-7 h-7" />
           </div>
           <div className="space-y-1 max-w-xs">
@@ -75,7 +75,7 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
           </div>
           <button
             onClick={onBackToBingo}
-            className="px-6 py-2.5 rounded-full bg-[#088F87] text-white text-xs font-semibold hover:bg-[#06726B] transition-all shadow-xs"
+            className="px-6 py-2.5 rounded-full bg-[#E05A47] text-white text-xs font-semibold hover:bg-[#C44633] transition-all shadow-xs"
           >
             Go to Bingo Board
           </button>
@@ -86,7 +86,7 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
           {connections.map((c) => (
             <div
               key={c.id || c.bingo_letter}
-              className="p-4 rounded-2xl bg-white border border-[#A3C4CB]/40 shadow-xs hover:border-[#088F87]/40 hover:shadow-sm transition-all duration-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center"
+              className="p-4 rounded-2xl bg-white border border-[#A3C4CB]/40 shadow-xs hover:border-[#E05A47]/40 hover:shadow-sm transition-all duration-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center"
             >
               {/* Selfie thumbnail with letter overlay */}
               <div
@@ -107,7 +107,7 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
                   alt={c.person_name}
                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-[#A3C4CB]/40 group-hover:scale-[1.02] transition-transform"
                 />
-                <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-lg bg-[#088F87] text-white font-serif text-xs font-bold flex items-center justify-center shadow-xs">
+                <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-lg bg-[#E05A47] text-white font-serif text-xs font-bold flex items-center justify-center shadow-xs">
                   {c.bingo_letter}
                 </div>
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity flex items-center justify-center text-white text-xs font-medium">
@@ -122,7 +122,7 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
                     <h3 className="font-serif text-xl font-medium text-[#0B3B3D]">
                       {c.person_name}
                     </h3>
-                    <span className="text-[10px] font-semibold text-[#088F87] bg-[#E6F6F5] px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-semibold text-[#E05A47] bg-[#FDF2F0] px-2 py-0.5 rounded-full">
                       Letter '{c.bingo_letter}'
                     </span>
                   </div>
@@ -135,10 +135,10 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
                 {/* Q&A Snippet */}
                 <div className="bg-[#F4F8F9] p-3 rounded-xl border border-[#A3C4CB]/30 space-y-1">
                   <div className="flex items-start gap-1.5 text-xs text-[#0B3B3D]/80">
-                    <Sparkles className="w-3.5 h-3.5 text-[#088F87] shrink-0 mt-0.5" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#E05A47] shrink-0 mt-0.5" />
                     <span className="font-medium text-[11px]">{c.random_question}</span>
                   </div>
-                  <div className="text-xs text-[#088F87] font-semibold italic pl-5">
+                  <div className="text-xs text-[#E05A47] font-semibold italic pl-5">
                     "{c.question_answer}"
                   </div>
                 </div>
@@ -161,14 +161,14 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
             </button>
 
             <div className="flex items-center gap-2 pt-1">
-              <span className="w-8 h-8 rounded-xl bg-[#088F87] text-white flex items-center justify-center font-serif text-sm font-bold">
+              <span className="w-8 h-8 rounded-xl bg-[#E05A47] text-white flex items-center justify-center font-serif text-sm font-bold">
                 {selectedSelfie.letter}
               </span>
               <div>
                 <h4 className="font-serif text-xl font-medium text-[#0B3B3D]">
                   {selectedSelfie.name}
                 </h4>
-                <p className="text-[11px] text-[#088F87] font-sans">
+                <p className="text-[11px] text-[#E05A47] font-sans">
                   Human Bingo Connection
                 </p>
               </div>
@@ -182,17 +182,17 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
               />
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#E6F6F5] border border-[#088F87]/20 space-y-1">
+            <div className="p-3.5 rounded-xl bg-[#FDF2F0] border border-[#E05A47]/20 space-y-1">
               <div className="text-[11px] font-semibold text-[#0B3B3D]">
                 Q: {selectedSelfie.question}
               </div>
-              <div className="text-xs text-[#088F87] font-bold italic">
+              <div className="text-xs text-[#E05A47] font-bold italic">
                 "{selectedSelfie.answer}"
               </div>
             </div>
 
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#0B3B3D]/60 pt-1">
-              <Heart className="w-3.5 h-3.5 fill-[#088F87] text-[#088F87]" />
+              <Heart className="w-3.5 h-3.5 fill-[#E05A47] text-[#E05A47]" />
               <span>Two of Us Memories</span>
             </div>
           </div>

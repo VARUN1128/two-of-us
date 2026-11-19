@@ -249,7 +249,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
         {/* Modal Top Bar */}
         <div className="p-4 px-5 border-b border-[#A3C4CB]/30 flex items-center justify-between bg-[#F4F8F9]">
           <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-xl bg-[#088F87] text-white flex items-center justify-center font-serif text-lg font-bold shadow-xs">
+            <span className="w-8 h-8 rounded-xl bg-[#E05A47] text-white flex items-center justify-center font-serif text-lg font-bold shadow-xs">
               {letter.toUpperCase()}
             </span>
             <div>
@@ -287,7 +287,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
           {step === 1 && (
             <form onSubmit={handleValidateStep1} className="space-y-5">
               <div className="text-center space-y-1 py-2">
-                <div className="text-xs text-[#088F87] font-semibold uppercase tracking-wider">
+                <div className="text-xs text-[#E05A47] font-semibold uppercase tracking-wider">
                   Step 1 • Identity Check
                 </div>
                 <h4 
@@ -313,7 +313,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     setPersonName(e.target.value);
                     if (errorMsg) setErrorMsg(null);
                   }}
-                  className="w-full px-4 py-3 rounded-xl border border-[#A3C4CB] bg-white text-base text-[#0B3B3D] placeholder-[#A3C4CB] focus:outline-none focus:border-[#088F87] focus:ring-1 focus:ring-[#088F87]"
+                  className="w-full px-4 py-3 rounded-xl border border-[#A3C4CB] bg-white text-base text-[#0B3B3D] placeholder-[#A3C4CB] focus:outline-none focus:border-[#E05A47] focus:ring-1 focus:ring-[#E05A47]"
                   autoFocus
                   required
                 />
@@ -323,7 +323,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 <div
                   className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
                     personName.trim().charAt(0).toUpperCase() === letter.toUpperCase()
-                      ? 'bg-[#E6F6F5] border-[#088F87]/30 text-[#088F87]'
+                      ? 'bg-[#FDF2F0] border-[#E05A47]/30 text-[#E05A47]'
                       : 'bg-red-50 border-red-200 text-red-700'
                   }`}
                 >
@@ -346,7 +346,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-6 rounded-2xl bg-[#088F87] hover:bg-[#06726B] text-white text-sm font-semibold transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white text-sm font-semibold transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <span>Next: Take a Selfie</span>
                   <ArrowRight className="w-4 h-4" />
@@ -359,7 +359,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
           {step === 2 && (
             <div className="space-y-4">
               <div className="text-center space-y-1">
-                <div className="text-xs text-[#088F87] font-semibold uppercase tracking-wider">
+                <div className="text-xs text-[#E05A47] font-semibold uppercase tracking-wider">
                   Step 2 • Take a Selfie
                 </div>
                 <h4 
@@ -414,10 +414,10 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                       <button
                         onClick={capturePhotoFromVideo}
                         type="button"
-                        className="w-14 h-14 rounded-full bg-white border-4 border-[#088F87] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+                        className="w-14 h-14 rounded-full bg-white border-4 border-[#E05A47] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
                         title="Capture Photo"
                       >
-                        <div className="w-10 h-10 rounded-full bg-[#088F87]" />
+                        <div className="w-10 h-10 rounded-full bg-[#E05A47]" />
                       </button>
                       <button
                         onClick={stopCamera}
@@ -439,7 +439,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                       <button
                         type="button"
                         onClick={startCamera}
-                        className="px-3.5 py-2 rounded-xl bg-[#088F87] text-white text-xs font-semibold hover:bg-[#06726B] flex items-center gap-1.5 shadow-xs"
+                        className="px-3.5 py-2 rounded-xl bg-[#E05A47] text-white text-xs font-semibold hover:bg-[#C44633] flex items-center gap-1.5 shadow-xs"
                       >
                         <Camera className="w-3.5 h-3.5" />
                         <span>Open Camera</span>
@@ -477,13 +477,13 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 }}
                 className={`p-3 rounded-xl border cursor-pointer transition-colors flex items-start gap-2.5 ${
                   photoConsent
-                    ? 'bg-[#E6F6F5] border-[#088F87]/40 text-[#0B3B3D]'
+                    ? 'bg-[#FDF2F0] border-[#E05A47]/40 text-[#0B3B3D]'
                     : 'bg-[#F4F8F9] border-[#A3C4CB]/40 text-[#0B3B3D]/80'
                 }`}
               >
-                <button type="button" className="mt-0.5 text-[#088F87] shrink-0 focus:outline-none">
+                <button type="button" className="mt-0.5 text-[#E05A47] shrink-0 focus:outline-none">
                   {photoConsent ? (
-                    <CheckSquare className="w-4 h-4 fill-[#088F87] text-white" />
+                    <CheckSquare className="w-4 h-4 fill-[#E05A47] text-white" />
                   ) : (
                     <Square className="w-4 h-4 text-[#A3C4CB]" />
                   )}
@@ -511,7 +511,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   disabled={!selfieSource || !photoConsent}
                   className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     selfieSource && photoConsent
-                      ? 'bg-[#088F87] hover:bg-[#06726B] text-white shadow-xs'
+                      ? 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-xs'
                       : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed'
                   }`}
                 >
@@ -526,7 +526,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
           {step === 3 && (
             <form onSubmit={handleValidateStep3} className="space-y-4">
               <div className="text-center space-y-1">
-                <div className="text-xs text-[#088F87] font-semibold uppercase tracking-wider">
+                <div className="text-xs text-[#E05A47] font-semibold uppercase tracking-wider">
                   Step 3 • The Fun Question
                 </div>
                 <h4 
@@ -538,8 +538,8 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
               </div>
 
               {/* The Assigned Random Question Card */}
-              <div className="p-4 rounded-2xl bg-[#E6F6F5] border border-[#088F87]/30 text-center space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#088F87]">
+              <div className="p-4 rounded-2xl bg-[#FDF2F0] border border-[#E05A47]/30 text-center space-y-2">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#E05A47]">
                   Random Conversation Starter
                 </span>
                 <p 
@@ -563,7 +563,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     if (errorMsg) setErrorMsg(null);
                   }}
                   rows={3}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#A3C4CB] bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] focus:outline-none focus:border-[#088F87]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#A3C4CB] bg-white text-sm text-[#0B3B3D] placeholder-[#A3C4CB] focus:outline-none focus:border-[#E05A47]"
                   required
                   autoFocus
                 />
@@ -583,7 +583,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   disabled={!questionAnswer.trim()}
                   className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     questionAnswer.trim()
-                      ? 'bg-[#088F87] hover:bg-[#06726B] text-white shadow-xs'
+                      ? 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-xs'
                       : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed'
                   }`}
                 >
@@ -598,7 +598,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
           {step === 4 && (
             <div className="space-y-4">
               <div className="text-center space-y-1">
-                <div className="w-10 h-10 rounded-full bg-[#E6F6F5] text-[#088F87] flex items-center justify-center mx-auto mb-1">
+                <div className="w-10 h-10 rounded-full bg-[#FDF2F0] text-[#E05A47] flex items-center justify-center mx-auto mb-1">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h4 
@@ -619,11 +619,11 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     <img
                       src={selfieSource}
                       alt="Connection selfie"
-                      className="w-14 h-14 rounded-xl object-cover border border-[#088F87]/30"
+                      className="w-14 h-14 rounded-xl object-cover border border-[#E05A47]/30"
                     />
                   )}
                   <div>
-                    <div className="text-xs text-[#088F87] font-semibold">
+                    <div className="text-xs text-[#E05A47] font-semibold">
                       Letter '{letter.toUpperCase()}'
                     </div>
                     <div className="text-base font-semibold text-[#0B3B3D]">
@@ -639,7 +639,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   <div className="text-[11px] font-semibold text-[#0B3B3D]">
                     Q: {assignedQuestion}
                   </div>
-                  <div className="text-xs italic text-[#088F87] bg-white p-2 rounded-lg border border-[#A3C4CB]/30">
+                  <div className="text-xs italic text-[#E05A47] bg-white p-2 rounded-lg border border-[#A3C4CB]/30">
                     "{questionAnswer}"
                   </div>
                 </div>
@@ -659,7 +659,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   type="button"
                   onClick={handleFinalSubmit}
                   disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#088F87] hover:bg-[#06726B] text-white text-xs font-semibold transition-all shadow-md active:scale-98 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="flex-1 py-3 px-4 rounded-xl bg-[#E05A47] hover:bg-[#C44633] text-white text-xs font-semibold transition-all shadow-md active:scale-98 flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>Saving Connection...</span>

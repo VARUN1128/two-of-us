@@ -9,14 +9,15 @@ export const DEFAULT_BINGO_LETTERS: string[] = [
 export const BRAND_COLORS = {
   deepInk: '#0B3B3D',
   paleBlue: '#A3C4CB',
-  lagoonTeal: '#088F87',
+  reddishOrange: '#E05A47',
+  lagoonTeal: '#E05A47', // alias for reddish-orange
   pureWhite: '#FFFFFF',
 };
 
 // Legal & event placeholders as requested in Section 10
 export const LEGAL_CONFIG = {
   organizerEmail: 'team@twoofus.live',
-  staffIdentifier: 'Teal Two of Us Badge or Lanyard',
+  staffIdentifier: 'Reddish-Orange Two of Us Badge or Lanyard',
   jurisdictionCity: 'Mumbai',
   minAge: 18,
 };

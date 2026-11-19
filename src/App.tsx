@@ -199,7 +199,7 @@ export default function App() {
   if (isLoadingSession) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-10 h-10 border-3 border-[#088F87] border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-10 h-10 border-3 border-[#E05A47] border-t-transparent rounded-full animate-spin mb-4" />
         <h2 
           className="text-2xl font-medium text-[#0B3B3D]"
           style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}

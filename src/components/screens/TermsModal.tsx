@@ -21,7 +21,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="p-5 border-b border-[#A3C4CB]/30 flex items-center justify-between bg-[#F4F8F9]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#E6F6F5] flex items-center justify-center text-[#088F87]">
+            <div className="w-8 h-8 rounded-full bg-[#FDF2F0] flex items-center justify-center text-[#E05A47]">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -47,7 +47,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
           {/* Section 1 */}
           <section className="space-y-2">
             <h4 className="font-serif text-base font-semibold text-[#0B3B3D] flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-[#088F87]" />
+              <UserCheck className="w-4 h-4 text-[#E05A47]" />
               1. Eligibility & Acceptance
             </h4>
             <p>
@@ -58,13 +58,13 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
           {/* Section 2 */}
           <section className="space-y-2">
             <h4 className="font-serif text-base font-semibold text-[#0B3B3D] flex items-center gap-2">
-              <Camera className="w-4 h-4 text-[#088F87]" />
+              <Camera className="w-4 h-4 text-[#E05A47]" />
               2. Consent to Photography & Selfies
             </h4>
             <p>
               Completing your Human Bingo board requires taking selfies with other event attendees. By playing, you consent to being photographed by other players and appearing in their in-app selfie submissions.
             </p>
-            <p className="p-3 bg-[#E6F6F5] rounded-xl text-xs text-[#0B3B3D] border border-[#088F87]/20">
+            <p className="p-3 bg-[#FDF2F0] rounded-xl text-xs text-[#0B3B3D] border border-[#E05A47]/20">
               <strong>Golden Rule:</strong> Never take or upload a selfie with someone who hasn't clearly agreed to it. Always ask first.
             </p>
             <p className="text-xs text-[#0B3B3D]/75">
@@ -75,7 +75,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
           {/* Section 3 */}
           <section className="space-y-2">
             <h4 className="font-serif text-base font-semibold text-[#0B3B3D] flex items-center gap-2">
-              <Lock className="w-4 h-4 text-[#088F87]" />
+              <Lock className="w-4 h-4 text-[#E05A47]" />
               3. Your Data & Privacy
             </h4>
             <p>
@@ -86,7 +86,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
               <li><strong>Your mobile number is never shared with other players</strong> and is used solely for session authentication and duplicate prevention.</li>
               <li>Your data is stored securely and used only for this event's gameplay and matchmaking.</li>
               <li>All personal data is deleted from our systems within 30 days of the event, unless you request earlier deletion.</li>
-              <li>You can request access, correction, or deletion of your data anytime by contacting: <span className="font-mono text-[#088F87]">{LEGAL_CONFIG.organizerEmail}</span>.</li>
+              <li>You can request access, correction, or deletion of your data anytime by contacting: <span className="font-mono text-[#E05A47]">{LEGAL_CONFIG.organizerEmail}</span>.</li>
               <li>We do not sell your personal data to any third parties.</li>
             </ul>
           </section>
@@ -94,7 +94,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
           {/* Section 4 */}
           <section className="space-y-2">
             <h4 className="font-serif text-base font-semibold text-[#0B3B3D] flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-[#088F87]" />
+              <AlertCircle className="w-4 h-4 text-[#E05A47]" />
               4. Code of Conduct
             </h4>
             <p>
@@ -139,7 +139,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
         <div className="p-4 border-t border-[#A3C4CB]/30 bg-[#F4F8F9] flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-full bg-[#088F87] hover:bg-[#06726B] text-white text-sm font-medium transition-colors shadow-xs active:scale-98"
+            className="px-6 py-2.5 rounded-full bg-[#E05A47] hover:bg-[#C44633] text-white text-sm font-medium transition-colors shadow-xs active:scale-98"
           >
             I Understand & Agree
           </button>

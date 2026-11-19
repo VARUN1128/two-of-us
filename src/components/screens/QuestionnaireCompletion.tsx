@@ -67,14 +67,14 @@ export const QuestionnaireCompletion: React.FC<QuestionnaireCompletionProps> = (
         {/* "Your Human Bingo awaits!" Feature Card */}
         <div className="p-5 rounded-3xl bg-[#EBF4F5] border border-[#A3C4CB]/40 text-left space-y-3.5 shadow-2xs">
           <div className="flex items-center gap-2 text-sm font-bold text-[#0B3B3D]">
-            <Sparkles className="w-4 h-4 text-[#088F87]" />
+            <Sparkles className="w-4 h-4 text-[#E05A47]" />
             <span>Your Human Bingo awaits!</span>
           </div>
 
           <div className="space-y-3 text-xs text-[#0B3B3D]/85">
             {/* Step 1 */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#088F87] flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#E05A47] flex items-center justify-center shrink-0 mt-0.5">
                 <Users className="w-3.5 h-3.5 stroke-[2]" />
               </div>
               <p className="leading-snug pt-0.5">
@@ -84,7 +84,7 @@ export const QuestionnaireCompletion: React.FC<QuestionnaireCompletionProps> = (
 
             {/* Step 2 */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#088F87] flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#E05A47] flex items-center justify-center shrink-0 mt-0.5">
                 <Camera className="w-3.5 h-3.5 stroke-[2]" />
               </div>
               <p className="leading-snug pt-0.5">
@@ -94,7 +94,7 @@ export const QuestionnaireCompletion: React.FC<QuestionnaireCompletionProps> = (
 
             {/* Step 3 */}
             <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#088F87] flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-7 h-7 rounded-full bg-[#A3C4CB]/30 text-[#E05A47] flex items-center justify-center shrink-0 mt-0.5">
                 <Trophy className="w-3.5 h-3.5 stroke-[2]" />
               </div>
               <p className="leading-snug pt-0.5">
@@ -109,7 +109,7 @@ export const QuestionnaireCompletion: React.FC<QuestionnaireCompletionProps> = (
       <div className="w-full pt-6 pb-2 space-y-2 relative z-10">
         <button
           onClick={onStartBingo}
-          className="w-full py-4 px-8 rounded-full bg-[#088F87] hover:bg-[#06726B] text-white font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200 active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
+          className="w-full py-4 px-8 rounded-full bg-[#E05A47] hover:bg-[#C44633] text-white font-medium text-base shadow-lg hover:shadow-xl transition-all duration-200 active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>Start Human Bingo</span>
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
