@@ -1,5 +1,4 @@
 import React from 'react';
-import { BrandLogo } from './BrandLogo';
 import type { AppStage, Participant } from '../../types';
 import { Users, Shield, ArrowLeft } from 'lucide-react';
 
@@ -23,10 +22,10 @@ export const Header: React.FC<HeaderProps> = ({
     (stage === 'bingo' || stage === 'connections' || stage === 'board_completed');
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#A3C4CB]/30 px-4 py-3 transition-all">
-      <div className="max-w-xl mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full px-5 py-3.5 transition-all bg-transparent">
+      <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Left: Brand or Back */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {stage === 'connections' ? (
             <button
               onClick={() => onNavigate('bingo')}
@@ -43,9 +42,19 @@ export const Header: React.FC<HeaderProps> = ({
                   onNavigate(participant ? (participant.questionnaire_completed ? 'bingo' : 'questionnaire') : 'welcome');
                 }
               }}
-              className="focus:outline-none text-left"
+              className="focus:outline-none flex items-center gap-2.5 text-left select-none group"
             >
-              <BrandLogo size="sm" showSubtitle={false} />
+              <img
+                src="/brand-heart-clean.png"
+                alt="Two of Us Logo"
+                className="w-6 h-6 object-contain group-hover:scale-105 transition-transform"
+              />
+              <span
+                className="font-serif text-2xl font-normal text-[#0B3B3D] tracking-tight leading-none"
+                style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+              >
+                Two of Us
+              </span>
             </button>
           )}
         </div>
@@ -66,18 +75,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Admin shortcut button */}
+          {/* Admin shortcut shield button matching screenshot */}
           <button
             onClick={onOpenAdmin}
             className={`p-2 rounded-full transition-colors ${
               stage === 'admin'
                 ? 'bg-[#088F87] text-white'
-                : 'text-[#A3C4CB] hover:text-[#0B3B3D] hover:bg-[#F4F8F9]'
+                : 'text-[#0B3B3D]/70 hover:text-[#088F87] hover:bg-[#F4F8F9]/80'
             }`}
-            title="Admin Dashboard"
-            aria-label="Admin Dashboard"
+            title="Organizer Command Center"
+            aria-label="Organizer Command Center"
           >
-            <Shield className="w-4 h-4" />
+            <Shield className="w-5 h-5 stroke-[1.5]" />
           </button>
         </div>
       </div>
