@@ -1,0 +1,748 @@
+import type { 
+  Participant, 
+  BingoBoard, 
+  BingoConnection, 
+  EventSettings, 
+  QuestionnaireAnswer,
+  WinningLine 
+} from '../types';
+import { supabase, isSupabaseConfigured } from './supabase';
+import { generateRandomBoardLetters } from '../constants/config';
+import { evaluateBingoBoard } from './bingoLogic';
+import { compressImage } from './imageCompression';
+
+const STORAGE_KEY_PREFIX = 'two_of_us_';
+const SESSION_PARTICIPANT_KEY = `${STORAGE_KEY_PREFIX}current_participant_id`;
+const LOCAL_PARTICIPANTS_KEY = `${STORAGE_KEY_PREFIX}participants`;
+const LOCAL_ANSWERS_KEY = `${STORAGE_KEY_PREFIX}questionnaire_answers`;
+const LOCAL_BOARDS_KEY = `${STORAGE_KEY_PREFIX}bingo_boards`;
+const LOCAL_CONNECTIONS_KEY = `${STORAGE_KEY_PREFIX}bingo_connections`;
+const LOCAL_SETTINGS_KEY = `${STORAGE_KEY_PREFIX}event_settings`;
+const LOCAL_COMPLETED_LINES_KEY = `${STORAGE_KEY_PREFIX}completed_line_ids`;
+
+// Default event settings
+const defaultSettings: EventSettings = {
+  id: 'event-settings-default',
+  event_name: 'Two of Us Live Event',
+  event_status: 'active',
+  registration_enabled: true,
+  bingo_enabled: true,
+};
+
+// Helper: read/write local storage JSON
+function getLocal<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    console.error(`Error reading ${key} from localStorage`, e);
+    return fallback;
+  }
+}
+
+function setLocal<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error writing ${key} to localStorage`, e);
+  }
+}
+
+// Clean Indian mobile number (e.g. removes +91, dashes, spaces, checks 10 digits starting with 6-9)
+export function sanitizeAndValidateIndianMobile(input: string): { isValid: boolean; cleanMobile: string; error?: string } {
+  let cleaned = input.replace(/\D/g, '');
+  if (cleaned.length === 12 && cleaned.startsWith('91')) {
+    cleaned = cleaned.substring(2);
+  } else if (cleaned.length === 11 && cleaned.startsWith('0')) {
+    cleaned = cleaned.substring(1);
+  }
+
+  if (cleaned.length !== 10) {
+    return { isValid: false, cleanMobile: cleaned, error: 'Mobile number must be a 10-digit Indian number' };
+  }
+
+  if (!/^[6-9]\d{9}$/.test(cleaned)) {
+    return { isValid: false, cleanMobile: cleaned, error: 'Indian mobile number should start with 6, 7, 8, or 9' };
+  }
+
+  return { isValid: true, cleanMobile: cleaned };
+}
+
+// Clean Instagram handle (ensure normalized string with or without @)
+export function sanitizeInstagramId(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  return trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
+}
+
+export class AppDataStore {
+  /**
+   * Register a new participant
+   */
+  static async registerParticipant(
+    fullName: string,
+    mobileInput: string,
+    instagramInput: string,
+    marketingOptOut = false
+  ): Promise<{ success: boolean; participant?: Participant; error?: string }> {
+    const mobileCheck = sanitizeAndValidateIndianMobile(mobileInput);
+    if (!mobileCheck.isValid) {
+      return { success: false, error: mobileCheck.error };
+    }
+    const cleanMobile = mobileCheck.cleanMobile;
+    const cleanName = fullName.trim();
+    if (!cleanName) {
+      return { success: false, error: 'Full name cannot be empty' };
+    }
+    const cleanInstagram = sanitizeInstagramId(instagramInput);
+    if (!cleanInstagram) {
+      return { success: false, error: 'Instagram ID is required' };
+    }
+
+    // Check duplicate mobile in Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: existing } = await supabase
+          .from('participants')
+          .select('id, full_name, mobile_number')
+          .eq('mobile_number', cleanMobile)
+          .maybeSingle();
+
+        if (existing) {
+          return {
+            success: false,
+            error: `A participant with mobile number ${cleanMobile} is already registered.`,
+          };
+        }
+
+        const newId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const participantData: Participant = {
+          id: newId,
+          full_name: cleanName,
+          mobile_number: cleanMobile,
+          instagram_id: cleanInstagram,
+          created_at: now,
+          terms_accepted: true,
+          terms_accepted_at: now,
+          marketing_opt_out: marketingOptOut,
+          questionnaire_completed: false,
+        };
+
+        const { data, error } = await supabase
+          .from('participants')
+          .insert([participantData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Supabase registration error:', error);
+          return { success: false, error: error.message };
+        }
+
+        localStorage.setItem(SESSION_PARTICIPANT_KEY, data.id);
+        // Also keep local fallback in sync
+        const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+        setLocal(LOCAL_PARTICIPANTS_KEY, [...localList.filter(p => p.id !== data.id), data]);
+
+        return { success: true, participant: data };
+      } catch (err: unknown) {
+        console.error('Error during Supabase registration, falling back to local store:', err);
+      }
+    }
+
+    // Local / Offline fallback
+    const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const existing = localList.find((p) => p.mobile_number === cleanMobile);
+    if (existing) {
+      return {
+        success: false,
+        error: `A participant with mobile number ${cleanMobile} is already registered.`,
+      };
+    }
+
+    const newParticipant: Participant = {
+      id: crypto.randomUUID(),
+      full_name: cleanName,
+      mobile_number: cleanMobile,
+      instagram_id: cleanInstagram,
+      created_at: new Date().toISOString(),
+      terms_accepted: true,
+      terms_accepted_at: new Date().toISOString(),
+      marketing_opt_out: marketingOptOut,
+      questionnaire_completed: false,
+    };
+
+    localList.push(newParticipant);
+    setLocal(LOCAL_PARTICIPANTS_KEY, localList);
+    localStorage.setItem(SESSION_PARTICIPANT_KEY, newParticipant.id);
+
+    return { success: true, participant: newParticipant };
+  }
+
+  /**
+   * Log in or recover session by mobile number
+   */
+  static async loginByMobile(mobileInput: string): Promise<{ success: boolean; participant?: Participant; error?: string }> {
+    const mobileCheck = sanitizeAndValidateIndianMobile(mobileInput);
+    if (!mobileCheck.isValid) {
+      return { success: false, error: mobileCheck.error };
+    }
+    const cleanMobile = mobileCheck.cleanMobile;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('participants')
+          .select('*')
+          .eq('mobile_number', cleanMobile)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          localStorage.setItem(SESSION_PARTICIPANT_KEY, data.id);
+          return { success: true, participant: data };
+        }
+      } catch (e) {
+        console.warn('Supabase login check failed, checking local:', e);
+      }
+    }
+
+    const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const found = localList.find(p => p.mobile_number === cleanMobile);
+    if (found) {
+      localStorage.setItem(SESSION_PARTICIPANT_KEY, found.id);
+      return { success: true, participant: found };
+    }
+
+    return { success: false, error: 'No participant found with this mobile number. Please register.' };
+  }
+
+  /**
+   * Get currently active participant
+   */
+  static async getCurrentParticipant(): Promise<Participant | null> {
+    const id = localStorage.getItem(SESSION_PARTICIPANT_KEY);
+    if (!id) return null;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase
+          .from('participants')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (data) return data;
+      } catch (err) {
+        console.warn('Failed to fetch participant from Supabase:', err);
+      }
+    }
+
+    const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    return localList.find((p) => p.id === id) || null;
+  }
+
+  /**
+   * Clear session
+   */
+  static clearSession(): void {
+    localStorage.removeItem(SESSION_PARTICIPANT_KEY);
+  }
+
+  /**
+   * Save an answer to the personality questionnaire
+   */
+  static async saveQuestionnaireAnswer(
+    participantId: string,
+    questionNumber: number,
+    questionText: string,
+    selectedOption: string
+  ): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('questionnaire_answers')
+          .upsert(
+            {
+              participant_id: participantId,
+              question_number: questionNumber,
+              question_text: questionText,
+              selected_option: selectedOption,
+              created_at: new Date().toISOString(),
+            },
+            { onConflict: 'participant_id, question_number' }
+          );
+      } catch (e) {
+        console.warn('Supabase answer save error:', e);
+      }
+    }
+
+    const answers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
+    const existingIdx = answers.findIndex(
+      (a) => a.participant_id === participantId && a.question_number === questionNumber
+    );
+
+    const entry: QuestionnaireAnswer = {
+      participant_id: participantId,
+      question_number: questionNumber,
+      question_text: questionText,
+      selected_option: selectedOption,
+      created_at: new Date().toISOString(),
+    };
+
+    if (existingIdx >= 0) {
+      answers[existingIdx] = entry;
+    } else {
+      answers.push(entry);
+    }
+    setLocal(LOCAL_ANSWERS_KEY, answers);
+  }
+
+  /**
+   * Get all answers for a participant
+   */
+  static async getQuestionnaireAnswers(participantId: string): Promise<Record<number, string>> {
+    const result: Record<number, string> = {};
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase
+          .from('questionnaire_answers')
+          .select('question_number, selected_option')
+          .eq('participant_id', participantId);
+
+        if (data) {
+          data.forEach((row) => {
+            result[row.question_number] = row.selected_option;
+          });
+          return result;
+        }
+      } catch (e) {
+        console.warn('Failed to load answers from Supabase:', e);
+      }
+    }
+
+    const answers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
+    answers
+      .filter((a) => a.participant_id === participantId)
+      .forEach((a) => {
+        result[a.question_number] = a.selected_option;
+      });
+
+    return result;
+  }
+
+  /**
+   * Complete questionnaire and mark participant status
+   */
+  static async completeQuestionnaire(participantId: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('participants')
+          .update({ questionnaire_completed: true })
+          .eq('id', participantId);
+      } catch (e) {
+        console.warn('Supabase questionnaire complete error:', e);
+      }
+    }
+
+    const localList = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const idx = localList.findIndex((p) => p.id === participantId);
+    if (idx >= 0) {
+      localList[idx].questionnaire_completed = true;
+      setLocal(LOCAL_PARTICIPANTS_KEY, localList);
+    }
+
+    // Ensure board is generated right after questionnaire completion
+    await this.getOrCreateBingoBoard(participantId);
+  }
+
+  /**
+   * Get or generate a fixed randomized 5x5 Bingo Board for a participant
+   */
+  static async getOrCreateBingoBoard(participantId: string): Promise<BingoBoard> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('bingo_boards')
+          .select('*')
+          .eq('participant_id', participantId)
+          .maybeSingle();
+
+        if (data && !error) {
+          return data;
+        }
+
+        if (!data) {
+          const letters = generateRandomBoardLetters();
+          const newBoard: BingoBoard = {
+            id: crypto.randomUUID(),
+            participant_id: participantId,
+            letters,
+            completed_letters: [],
+            created_at: new Date().toISOString(),
+          };
+
+          const { data: created } = await supabase
+            .from('bingo_boards')
+            .insert([newBoard])
+            .select()
+            .single();
+
+          if (created) return created;
+        }
+      } catch (e) {
+        console.warn('Supabase board get/create error:', e);
+      }
+    }
+
+    const boards = getLocal<BingoBoard[]>(LOCAL_BOARDS_KEY, []);
+    let board = boards.find((b) => b.participant_id === participantId);
+    if (!board) {
+      board = {
+        id: crypto.randomUUID(),
+        participant_id: participantId,
+        letters: generateRandomBoardLetters(),
+        completed_letters: [],
+        created_at: new Date().toISOString(),
+      };
+      boards.push(board);
+      setLocal(LOCAL_BOARDS_KEY, boards);
+    }
+
+    return board;
+  }
+
+  /**
+   * Upload selfie image (to Supabase Storage or returns compressed base64 data URL)
+   */
+  static async uploadSelfie(
+    participantId: string,
+    letter: string,
+    imageSource: File | string
+  ): Promise<string> {
+    const compressed = await compressImage(imageSource);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const fileName = `${participantId}/${letter}_${Date.now()}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('two-of-us-selfies')
+          .upload(fileName, compressed.blob, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+
+        if (!uploadError) {
+          const { data: publicData } = supabase.storage
+            .from('two-of-us-selfies')
+            .getPublicUrl(fileName);
+
+          if (publicData?.publicUrl) {
+            return publicData.publicUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase storage upload error, falling back to data URL:', err);
+      }
+    }
+
+    // Fallback: return high quality compressed data URL
+    return compressed.dataUrl;
+  }
+
+  /**
+   * Submit a completed Bingo letter connection
+   */
+  static async submitBingoConnection(
+    participantId: string,
+    letter: string,
+    personName: string,
+    selfieImageSource: File | string,
+    randomQuestion: string,
+    questionAnswer: string
+  ): Promise<{
+    success: boolean;
+    connection?: BingoConnection;
+    board?: BingoBoard;
+    newlyCompletedLines: WinningLine[];
+    isFullBoardCompleted: boolean;
+    error?: string;
+  }> {
+    const cleanLetter = letter.trim().toUpperCase();
+    const cleanName = personName.trim();
+
+    if (!cleanName) {
+      return { success: false, error: "Please enter the person's first name", newlyCompletedLines: [], isFullBoardCompleted: false };
+    }
+
+    // Validate that the name starts with the selected letter
+    if (cleanName.charAt(0).toUpperCase() !== cleanLetter) {
+      return {
+        success: false,
+        error: `Name "${cleanName}" does not start with letter "${cleanLetter}"!`,
+        newlyCompletedLines: [],
+        isFullBoardCompleted: false,
+      };
+    }
+
+    if (!questionAnswer.trim()) {
+      return { success: false, error: 'Please enter their answer to the question', newlyCompletedLines: [], isFullBoardCompleted: false };
+    }
+
+    const board = await this.getOrCreateBingoBoard(participantId);
+
+    // Prevent duplicate letter completion
+    if (board.completed_letters.map((l) => l.toUpperCase()).includes(cleanLetter)) {
+      return {
+        success: false,
+        error: `Letter "${cleanLetter}" is already completed on your board.`,
+        newlyCompletedLines: [],
+        isFullBoardCompleted: false,
+      };
+    }
+
+    // Compress & upload selfie
+    let selfieUrl: string;
+    try {
+      selfieUrl = await this.uploadSelfie(participantId, cleanLetter, selfieImageSource);
+    } catch (e: unknown) {
+      console.error('Selfie processing failed:', e);
+      return {
+        success: false,
+        error: 'Failed to process selfie image. Please try again.',
+        newlyCompletedLines: [],
+        isFullBoardCompleted: false,
+      };
+    }
+
+    const newConnection: BingoConnection = {
+      id: crypto.randomUUID(),
+      participant_id: participantId,
+      bingo_letter: cleanLetter,
+      person_name: cleanName,
+      selfie_url: selfieUrl,
+      random_question: randomQuestion,
+      question_answer: questionAnswer.trim(),
+      created_at: new Date().toISOString(),
+    };
+
+    // Update completed letters
+    const updatedCompletedLetters = Array.from(new Set([...board.completed_letters, cleanLetter]));
+    const now = new Date().toISOString();
+    const isFullCompleted = updatedCompletedLetters.length >= 25;
+
+    // Track previous winning lines for celebration trigger
+    const prevLineIds = getLocal<string[]>(`${LOCAL_COMPLETED_LINES_KEY}_${participantId}`, []);
+    const evalResult = evaluateBingoBoard(board.letters, updatedCompletedLetters, prevLineIds);
+
+    // Save newly completed lines in participant's state
+    const currentCompletedLineIds = evalResult.completedLines.map(l => l.id);
+    setLocal(`${LOCAL_COMPLETED_LINES_KEY}_${participantId}`, currentCompletedLineIds);
+
+    // Persist to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('bingo_connections').insert([newConnection]);
+        await supabase
+          .from('bingo_boards')
+          .update({
+            completed_letters: updatedCompletedLetters,
+            completed_at: isFullCompleted ? now : board.completed_at,
+          })
+          .eq('participant_id', participantId);
+      } catch (e) {
+        console.warn('Supabase connection save error:', e);
+      }
+    }
+
+    // Persist locally
+    const connections = getLocal<BingoConnection[]>(LOCAL_CONNECTIONS_KEY, []);
+    connections.push(newConnection);
+    setLocal(LOCAL_CONNECTIONS_KEY, connections);
+
+    const boards = getLocal<BingoBoard[]>(LOCAL_BOARDS_KEY, []);
+    const bIdx = boards.findIndex((b) => b.participant_id === participantId);
+    const updatedBoard: BingoBoard = {
+      ...board,
+      completed_letters: updatedCompletedLetters,
+      completed_at: isFullCompleted ? now : board.completed_at,
+    };
+    if (bIdx >= 0) {
+      boards[bIdx] = updatedBoard;
+    } else {
+      boards.push(updatedBoard);
+    }
+    setLocal(LOCAL_BOARDS_KEY, boards);
+
+    return {
+      success: true,
+      connection: newConnection,
+      board: updatedBoard,
+      newlyCompletedLines: evalResult.newlyCompletedLines,
+      isFullBoardCompleted: evalResult.isFullBoardCompleted,
+    };
+  }
+
+  /**
+   * Get all connections for a participant (strictly scoped to participant)
+   */
+  static async getParticipantConnections(participantId: string): Promise<BingoConnection[]> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase
+          .from('bingo_connections')
+          .select('*')
+          .eq('participant_id', participantId)
+          .order('created_at', { ascending: false });
+
+        if (data) return data;
+      } catch (e) {
+        console.warn('Supabase connections fetch error:', e);
+      }
+    }
+
+    const connections = getLocal<BingoConnection[]>(LOCAL_CONNECTIONS_KEY, []);
+    return connections
+      .filter((c) => c.participant_id === participantId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  /**
+   * Get event settings
+   */
+  static async getEventSettings(): Promise<EventSettings> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase
+          .from('event_settings')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+
+        if (data) return data;
+      } catch (e) {
+        console.warn('Supabase settings fetch error:', e);
+      }
+    }
+
+    return getLocal<EventSettings>(LOCAL_SETTINGS_KEY, defaultSettings);
+  }
+
+  /**
+   * Update event settings (admin)
+   */
+  static async updateEventSettings(updated: Partial<EventSettings>): Promise<EventSettings> {
+    const current = await this.getEventSettings();
+    const merged: EventSettings = { ...current, ...updated };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('event_settings')
+          .update(merged)
+          .eq('id', current.id);
+      } catch (e) {
+        console.warn('Supabase settings update error:', e);
+      }
+    }
+
+    setLocal(LOCAL_SETTINGS_KEY, merged);
+    return merged;
+  }
+
+  /**
+   * Get admin dashboard analytics and participant list
+   */
+  static async getAdminData(): Promise<{
+    stats: {
+      totalRegistrations: number;
+      questionnaireCompleted: number;
+      activeBingoParticipants: number;
+      totalConnections: number;
+      completedBingoBoards: number;
+      avgConnectionsPerParticipant: number;
+    };
+    participants: Array<{
+      participant: Participant;
+      completedLettersCount: number;
+      completedLinesCount: number;
+      isBoardComplete: boolean;
+      lastActive: string;
+    }>;
+  }> {
+    let participants: Participant[] = [];
+    let boards: BingoBoard[] = [];
+    let connections: BingoConnection[] = [];
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const [pRes, bRes, cRes] = await Promise.all([
+          supabase.from('participants').select('*').order('created_at', { ascending: false }),
+          supabase.from('bingo_boards').select('*'),
+          supabase.from('bingo_connections').select('*'),
+        ]);
+
+        if (pRes.data) participants = pRes.data;
+        if (bRes.data) boards = bRes.data;
+        if (cRes.data) connections = cRes.data;
+      } catch (e) {
+        console.warn('Admin fetch error from Supabase, reading local:', e);
+      }
+    }
+
+    if (participants.length === 0) {
+      participants = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+      boards = getLocal<BingoBoard[]>(LOCAL_BOARDS_KEY, []);
+      connections = getLocal<BingoConnection[]>(LOCAL_CONNECTIONS_KEY, []);
+    }
+
+    const totalRegistrations = participants.length;
+    const questionnaireCompleted = participants.filter((p) => p.questionnaire_completed).length;
+    const totalConnections = connections.length;
+    
+    // Board stats
+    let completedBingoBoards = 0;
+    const boardByParticipant = new Map<string, BingoBoard>();
+    boards.forEach((b) => {
+      boardByParticipant.set(b.participant_id, b);
+      if (b.completed_letters && b.completed_letters.length >= 25) {
+        completedBingoBoards++;
+      }
+    });
+
+    const activeBingoParticipants = boards.filter(
+      (b) => b.completed_letters && b.completed_letters.length > 0
+    ).length;
+
+    const avgConnectionsPerParticipant =
+      totalRegistrations > 0 ? Number((totalConnections / totalRegistrations).toFixed(1)) : 0;
+
+    const participantRows = participants.map((p) => {
+      const b = boardByParticipant.get(p.id);
+      const completedLetters = b ? b.completed_letters : [];
+      const evalRes = b ? evaluateBingoBoard(b.letters, completedLetters) : null;
+      return {
+        participant: p,
+        completedLettersCount: completedLetters.length,
+        completedLinesCount: evalRes ? evalRes.completedCount : 0,
+        isBoardComplete: completedLetters.length >= 25,
+        lastActive: p.created_at,
+      };
+    });
+
+    return {
+      stats: {
+        totalRegistrations,
+        questionnaireCompleted,
+        activeBingoParticipants,
+        totalConnections,
+        completedBingoBoards,
+        avgConnectionsPerParticipant,
+      },
+      participants: participantRows,
+    };
+  }
+}
