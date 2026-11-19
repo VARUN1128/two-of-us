@@ -8,6 +8,7 @@ interface HeaderProps {
   connectionsCount: number;
   onNavigate: (stage: AppStage) => void;
   onOpenAdmin: () => void;
+  onSignOut?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   connectionsCount,
   onNavigate,
   onOpenAdmin,
+  onSignOut,
 }) => {
   const showConnections =
     participant &&
@@ -40,6 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => {
                 if (stage === 'admin') {
                   onNavigate(participant ? (participant.questionnaire_completed ? 'bingo' : 'questionnaire') : 'welcome');
+                } else if (!participant) {
+                  onNavigate('welcome');
                 }
               }}
               className="focus:outline-none flex items-center gap-2.5 text-left select-none group"
@@ -72,6 +76,17 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="w-5 h-5 rounded-full bg-[#088F87] text-white flex items-center justify-center text-[10px] font-bold">
                 {connectionsCount}
               </span>
+            </button>
+          )}
+
+          {/* Sign Out / Reset if logged in */}
+          {participant && onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="px-2.5 py-1 text-[11px] font-medium text-[#0B3B3D]/60 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Sign Out / Switch Player"
+            >
+              Exit
             </button>
           )}
 

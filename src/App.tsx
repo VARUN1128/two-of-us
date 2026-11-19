@@ -26,6 +26,24 @@ export default function App() {
 
     async function initSession() {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('reset') === '1' || urlParams.get('reset') === 'true') {
+          AppDataStore.clearSession();
+          window.history.replaceState({}, '', window.location.pathname);
+          setStage('welcome');
+          setParticipant(null);
+          setBoard(null);
+          setConnections([]);
+          setIsLoadingSession(false);
+          return;
+        }
+
+        if (urlParams.get('view') === 'welcome') {
+          setStage('welcome');
+          setIsLoadingSession(false);
+          return;
+        }
+
         const [current, settings] = await Promise.all([
           AppDataStore.getCurrentParticipant(),
           AppDataStore.getEventSettings(),
@@ -146,6 +164,13 @@ export default function App() {
         connectionsCount={connections.length}
         onNavigate={(targetStage) => setStage(targetStage)}
         onOpenAdmin={() => setStage(stage === 'admin' ? (participant ? (participant.questionnaire_completed ? 'bingo' : 'questionnaire') : 'welcome') : 'admin')}
+        onSignOut={() => {
+          AppDataStore.clearSession();
+          setParticipant(null);
+          setBoard(null);
+          setConnections([]);
+          setStage('welcome');
+        }}
       />
 
       {/* Event Paused Alert if organizer set status to paused */}
