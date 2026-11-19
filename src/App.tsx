@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react';
+import { 
+  Routes, 
+  Route, 
+  Navigate, 
+  useNavigate, 
+  useLocation, 
+  useSearchParams 
+} from 'react-router-dom';
 import type { AppStage, BingoBoard, BingoConnection, Participant } from './types';
 import { AppDataStore } from './lib/store';
 import { Header } from './components/common/Header';
@@ -13,12 +21,29 @@ import { AdminDashboard } from './components/screens/AdminDashboard';
 import { AlertCircle } from 'lucide-react';
 
 export default function App() {
-  const [stage, setStage] = useState<AppStage>('welcome');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [board, setBoard] = useState<BingoBoard | null>(null);
   const [connections, setConnections] = useState<BingoConnection[]>([]);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [eventPausedNotice, setEventPausedNotice] = useState(false);
+
+  // Map current route to AppStage for Header
+  const getStageFromPath = (path: string): AppStage => {
+    if (path.startsWith('/admin')) return 'admin';
+    if (path.startsWith('/connections')) return 'connections';
+    if (path.startsWith('/completed')) return 'board_completed';
+    if (path.startsWith('/bingo')) return 'bingo';
+    if (path.startsWith('/questionnaire/complete')) return 'questionnaire_complete';
+    if (path.startsWith('/questionnaire')) return 'questionnaire';
+    if (path.startsWith('/register')) return 'registration';
+    return 'welcome';
+  };
+
+  const stage = getStageFromPath(location.pathname);
 
   // Initialize and restore session on mount
   useEffect(() => {
@@ -26,21 +51,14 @@ export default function App() {
 
     async function initSession() {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('reset') === '1' || urlParams.get('reset') === 'true') {
+        // Handle reset query (?reset=1)
+        if (searchParams.get('reset') === '1' || searchParams.get('reset') === 'true') {
           AppDataStore.clearSession();
-          window.history.replaceState({}, '', window.location.pathname);
-          setStage('welcome');
           setParticipant(null);
           setBoard(null);
           setConnections([]);
           setIsLoadingSession(false);
-          return;
-        }
-
-        if (urlParams.get('view') === 'welcome') {
-          setStage('welcome');
-          setIsLoadingSession(false);
+          navigate('/welcome', { replace: true });
           return;
         }
 
@@ -56,22 +74,22 @@ export default function App() {
         if (current && isMounted) {
           setParticipant(current);
 
-          if (!current.questionnaire_completed) {
-            setStage('questionnaire');
-          } else {
-            // Load their board and connections
-            const [userBoard, userConnections] = await Promise.all([
-              AppDataStore.getOrCreateBingoBoard(current.id),
-              AppDataStore.getParticipantConnections(current.id),
-            ]);
+          const [userBoard, userConnections] = await Promise.all([
+            AppDataStore.getOrCreateBingoBoard(current.id),
+            AppDataStore.getParticipantConnections(current.id),
+          ]);
 
-            setBoard(userBoard);
-            setConnections(userConnections);
+          setBoard(userBoard);
+          setConnections(userConnections);
 
-            if (userBoard.completed_letters && userBoard.completed_letters.length >= 25) {
-              setStage('board_completed');
+          // Route initial landing if on root "/"
+          if (location.pathname === '/') {
+            if (!current.questionnaire_completed) {
+              navigate('/questionnaire', { replace: true });
+            } else if (userBoard.completed_letters && userBoard.completed_letters.length >= 25) {
+              navigate('/completed', { replace: true });
             } else {
-              setStage('bingo');
+              navigate('/bingo', { replace: true });
             }
           }
         }
@@ -94,26 +112,25 @@ export default function App() {
   // When a new participant registers
   const handleRegistered = (newParticipant: Participant) => {
     setParticipant(newParticipant);
-    setStage('questionnaire');
+    navigate('/questionnaire');
   };
 
   // When a participant resumes with mobile
   const handleLoginSuccess = async (resumedParticipant: Participant) => {
     setParticipant(resumedParticipant);
+    const [userBoard, userConnections] = await Promise.all([
+      AppDataStore.getOrCreateBingoBoard(resumedParticipant.id),
+      AppDataStore.getParticipantConnections(resumedParticipant.id),
+    ]);
+    setBoard(userBoard);
+    setConnections(userConnections);
+
     if (!resumedParticipant.questionnaire_completed) {
-      setStage('questionnaire');
+      navigate('/questionnaire');
+    } else if (userBoard.completed_letters && userBoard.completed_letters.length >= 25) {
+      navigate('/completed');
     } else {
-      const [userBoard, userConnections] = await Promise.all([
-        AppDataStore.getOrCreateBingoBoard(resumedParticipant.id),
-        AppDataStore.getParticipantConnections(resumedParticipant.id),
-      ]);
-      setBoard(userBoard);
-      setConnections(userConnections);
-      if (userBoard.completed_letters && userBoard.completed_letters.length >= 25) {
-        setStage('board_completed');
-      } else {
-        setStage('bingo');
-      }
+      navigate('/bingo');
     }
   };
 
@@ -122,19 +139,60 @@ export default function App() {
     if (participant) {
       const userBoard = await AppDataStore.getOrCreateBingoBoard(participant.id);
       setBoard(userBoard);
-      setStage('questionnaire_complete');
+      navigate('/questionnaire/complete');
     }
   };
 
   // When starting Bingo from questionnaire completion transition
   const handleStartBingo = () => {
-    setStage('bingo');
+    navigate('/bingo');
   };
 
   // When board state updates (after completing a letter)
   const handleBoardUpdated = (updatedBoard: BingoBoard, updatedConnections: BingoConnection[]) => {
     setBoard(updatedBoard);
     setConnections(updatedConnections);
+  };
+
+  // Navigation from Header
+  const handleHeaderNavigate = (targetStage: AppStage) => {
+    switch (targetStage) {
+      case 'welcome':
+        navigate('/welcome');
+        break;
+      case 'registration':
+        navigate('/register');
+        break;
+      case 'questionnaire':
+        navigate('/questionnaire');
+        break;
+      case 'questionnaire_complete':
+        navigate('/questionnaire/complete');
+        break;
+      case 'bingo':
+        navigate('/bingo');
+        break;
+      case 'connections':
+        navigate('/connections');
+        break;
+      case 'board_completed':
+        navigate('/completed');
+        break;
+      case 'admin':
+        navigate('/admin');
+        break;
+      default:
+        navigate('/welcome');
+    }
+  };
+
+  // Sign out / exit
+  const handleSignOut = () => {
+    AppDataStore.clearSession();
+    setParticipant(null);
+    setBoard(null);
+    setConnections([]);
+    navigate('/welcome');
   };
 
   // Loading Screen
@@ -162,15 +220,9 @@ export default function App() {
         stage={stage}
         participant={participant}
         connectionsCount={connections.length}
-        onNavigate={(targetStage) => setStage(targetStage)}
-        onOpenAdmin={() => setStage(stage === 'admin' ? (participant ? (participant.questionnaire_completed ? 'bingo' : 'questionnaire') : 'welcome') : 'admin')}
-        onSignOut={() => {
-          AppDataStore.clearSession();
-          setParticipant(null);
-          setBoard(null);
-          setConnections([]);
-          setStage('welcome');
-        }}
+        onNavigate={handleHeaderNavigate}
+        onOpenAdmin={() => navigate(stage === 'admin' ? (participant ? '/bingo' : '/welcome') : '/admin')}
+        onSignOut={handleSignOut}
       />
 
       {/* Event Paused Alert if organizer set status to paused */}
@@ -181,70 +233,138 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Content Pages */}
+      {/* Main Content with URL Routes */}
       <main className="flex-1 flex flex-col justify-start w-full">
-        {stage === 'welcome' && (
-          <WelcomePage
-            onStartRegistration={() => setStage('registration')}
-            onLoginSuccess={handleLoginSuccess}
+        <Routes>
+          {/* Welcome Screen */}
+          <Route
+            path="/"
+            element={
+              participant ? (
+                participant.questionnaire_completed ? (
+                  <Navigate to="/bingo" replace />
+                ) : (
+                  <Navigate to="/questionnaire" replace />
+                )
+              ) : (
+                <WelcomePage
+                  onStartRegistration={() => navigate('/register')}
+                  onLoginSuccess={handleLoginSuccess}
+                />
+              )
+            }
           />
-        )}
-
-        {stage === 'registration' && (
-          <RegistrationPage
-            onBack={() => setStage('welcome')}
-            onRegistered={handleRegistered}
+          <Route
+            path="/welcome"
+            element={
+              <WelcomePage
+                onStartRegistration={() => navigate('/register')}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            }
           />
-        )}
 
-        {stage === 'questionnaire' && participant && (
-          <QuestionnairePage
-            participant={participant}
-            onComplete={handleQuestionnaireFinished}
+          {/* Registration Screen */}
+          <Route
+            path="/register"
+            element={
+              <RegistrationPage
+                onBack={() => navigate('/welcome')}
+                onRegistered={handleRegistered}
+              />
+            }
           />
-        )}
 
-        {stage === 'questionnaire_complete' && (
-          <QuestionnaireCompletion onStartBingo={handleStartBingo} />
-        )}
-
-        {stage === 'bingo' && participant && board && (
-          <HumanBingoPage
-            participant={participant}
-            board={board}
-            connections={connections}
-            onBoardUpdated={handleBoardUpdated}
-            onViewConnections={() => setStage('connections')}
-            onFullBoardCompleted={() => setStage('board_completed')}
+          {/* Personality Questionnaire */}
+          <Route
+            path="/questionnaire"
+            element={
+              participant ? (
+                <QuestionnairePage
+                  participant={participant}
+                  onComplete={handleQuestionnaireFinished}
+                />
+              ) : (
+                <Navigate to="/welcome" replace />
+              )
+            }
           />
-        )}
 
-        {stage === 'connections' && participant && (
-          <MyConnectionsPage
-            participant={participant}
-            connections={connections}
-            onBackToBingo={() => setStage('bingo')}
+          {/* Questionnaire Transition Screen */}
+          <Route
+            path="/questionnaire/complete"
+            element={<QuestionnaireCompletion onStartBingo={handleStartBingo} />}
           />
-        )}
 
-        {stage === 'board_completed' && board && (
-          <CompletionPage
-            board={board}
-            onViewConnections={() => setStage('connections')}
+          {/* Human Bingo Board */}
+          <Route
+            path="/bingo"
+            element={
+              participant && board ? (
+                <HumanBingoPage
+                  participant={participant}
+                  board={board}
+                  connections={connections}
+                  onBoardUpdated={handleBoardUpdated}
+                  onViewConnections={() => navigate('/connections')}
+                  onFullBoardCompleted={() => navigate('/completed')}
+                />
+              ) : (
+                <Navigate to="/welcome" replace />
+              )
+            }
           />
-        )}
 
-        {stage === 'admin' && (
-          <AdminDashboard
-            onBackToApp={() => {
-              if (participant) {
-                setStage(participant.questionnaire_completed ? 'bingo' : 'questionnaire');
-              } else {
-                setStage('welcome');
-              }
-            }}
+          {/* My Connections Screen */}
+          <Route
+            path="/connections"
+            element={
+              participant ? (
+                <MyConnectionsPage
+                  participant={participant}
+                  connections={connections}
+                  onBackToBingo={() => navigate('/bingo')}
+                />
+              ) : (
+                <Navigate to="/welcome" replace />
+              )
+            }
           />
-        )}
+
+          {/* Completion Celebration */}
+          <Route
+            path="/completed"
+            element={
+              board ? (
+                <CompletionPage
+                  board={board}
+                  onViewConnections={() => navigate('/connections')}
+                />
+              ) : (
+                <Navigate to="/welcome" replace />
+              )
+            }
+          />
+
+          {/* Organizer Command Center / Admin Dashboard */}
+          <Route
+            path="/admin"
+            element={
+              <AdminDashboard
+                onBackToApp={() => {
+                  if (participant) {
+                    navigate(participant.questionnaire_completed ? '/bingo' : '/questionnaire');
+                  } else {
+                    navigate('/welcome');
+                  }
+                }}
+              />
+            }
+          />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </div>
   );

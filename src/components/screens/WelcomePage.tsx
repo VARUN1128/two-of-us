@@ -38,9 +38,9 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
   };
 
   return (
-    <div className="relative min-h-[90vh] flex-1 flex flex-col justify-between items-center px-6 pt-4 pb-12 text-center max-w-md mx-auto w-full select-none overflow-hidden">
+    <div className="relative min-h-[90vh] flex-1 flex flex-col justify-between items-center px-6 pt-4 pb-12 text-center max-w-md mx-auto w-full select-none overflow-hidden isolate">
       {/* Top right organic wave background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none -z-10 overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none z-0 overflow-hidden">
         <svg
           viewBox="0 0 300 300"
           fill="none"
@@ -60,14 +60,14 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
       </div>
 
       {/* Main Hero Section */}
-      <div className="w-full space-y-6 pt-2">
+      <div className="w-full space-y-5 pt-2 relative z-10">
         {/* Brand Logo & Live Event Badge */}
         <div className="flex flex-col items-center">
           <BrandLogo size="md" showSubtitle={true} />
         </div>
 
         {/* Headline exactly matching reference design */}
-        <div className="space-y-3 px-2">
+        <div className="space-y-2.5 px-2">
           <h1
             className="text-4xl md:text-5xl font-medium tracking-tight text-[#0B3B3D] leading-[1.14]"
             style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
@@ -83,7 +83,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
         </div>
 
         {/* Arctic Foxes Illustration */}
-        <div className="relative w-full max-w-[280px] mx-auto py-1">
+        <div className="relative w-full max-w-[270px] mx-auto py-1">
           <img
             src="/mascot-foxes-clean.png"
             alt="Two of Us Arctic Foxes Mascot"
@@ -126,7 +126,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
       </div>
 
       {/* Bottom CTA & Resume Action */}
-      <div className="w-full pt-8 pb-4 space-y-3.5 z-10">
+      <div className="w-full pt-6 pb-2 space-y-3 relative z-10">
         {!showLogin ? (
           <>
             <button
@@ -191,8 +191,8 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
         )}
       </div>
 
-      {/* Bottom organic wave graphics matching reference */}
-      <div className="absolute bottom-0 inset-x-0 h-14 pointer-events-none -z-10 overflow-hidden">
+      {/* Bottom organic wave graphics */}
+      <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none z-0 overflow-hidden">
         <svg
           viewBox="0 0 500 80"
           preserveAspectRatio="none"
@@ -200,13 +200,11 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full"
         >
-          {/* Pale blue layer */}
           <path
             d="M0 40C120 10 240 60 500 20V80H0V40Z"
             fill="#A3C4CB"
             fillOpacity="0.4"
           />
-          {/* Deep Ink wave */}
           <path
             d="M0 55C150 25 320 65 500 45V80H0V55Z"
             fill="#0B3B3D"
