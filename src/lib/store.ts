@@ -269,25 +269,7 @@ export class AppDataStore {
     questionText: string,
     selectedOption: string
   ): Promise<void> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase
-          .from('questionnaire_answers')
-          .upsert(
-            {
-              participant_id: participantId,
-              question_number: questionNumber,
-              question_text: questionText,
-              selected_option: selectedOption,
-              created_at: new Date().toISOString(),
-            },
-            { onConflict: 'participant_id, question_number' }
-          );
-      } catch (e) {
-        console.warn('Supabase answer save error:', e);
-      }
-    }
-
+    // 1. Immediately persist locally so answers are never lost
     const answers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
     const existingIdx = answers.findIndex(
       (a) => a.participant_id === participantId && a.question_number === questionNumber
@@ -307,6 +289,29 @@ export class AppDataStore {
       answers.push(entry);
     }
     setLocal(LOCAL_ANSWERS_KEY, answers);
+
+    // 2. Sync with Supabase (handle both with or without unique constraint)
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('questionnaire_answers')
+          .delete()
+          .eq('participant_id', participantId)
+          .eq('question_number', questionNumber);
+
+        await supabase
+          .from('questionnaire_answers')
+          .insert({
+            participant_id: participantId,
+            question_number: questionNumber,
+            question_text: questionText,
+            selected_option: selectedOption,
+            created_at: new Date().toISOString(),
+          });
+      } catch (e) {
+        console.warn('Supabase answer save error:', e);
+      }
+    }
   }
 
   /**
@@ -315,6 +320,15 @@ export class AppDataStore {
   static async getQuestionnaireAnswers(participantId: string): Promise<Record<number, string>> {
     const result: Record<number, string> = {};
 
+    // 1. Load from local store first
+    const answers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
+    answers
+      .filter((a) => a.participant_id === participantId)
+      .forEach((a) => {
+        result[a.question_number] = a.selected_option;
+      });
+
+    // 2. Merge from Supabase if available
     if (isSupabaseConfigured && supabase) {
       try {
         const { data } = await supabase
@@ -322,23 +336,15 @@ export class AppDataStore {
           .select('question_number, selected_option')
           .eq('participant_id', participantId);
 
-        if (data) {
+        if (data && data.length > 0) {
           data.forEach((row) => {
             result[row.question_number] = row.selected_option;
           });
-          return result;
         }
       } catch (e) {
         console.warn('Failed to load answers from Supabase:', e);
       }
     }
-
-    const answers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
-    answers
-      .filter((a) => a.participant_id === participantId)
-      .forEach((a) => {
-        result[a.question_number] = a.selected_option;
-      });
 
     return result;
   }

@@ -29,10 +29,12 @@ CREATE TABLE IF NOT EXISTS public.questionnaire_answers (
     question_number INT NOT NULL,
     question_text TEXT NOT NULL,
     selected_option TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT unique_participant_question UNIQUE(participant_id, question_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_questionnaire_participant ON public.questionnaire_answers (participant_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_questionnaire_participant_qnum ON public.questionnaire_answers (participant_id, question_number);
 
 -- 4. Bingo Boards Table
 CREATE TABLE IF NOT EXISTS public.bingo_boards (

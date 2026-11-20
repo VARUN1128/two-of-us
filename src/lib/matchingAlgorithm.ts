@@ -179,7 +179,9 @@ export const CURATED_EVENT_ATTENDEES: CandidateProfile[] = [
  */
 function normalizeAnswer(ans: string | undefined): string {
   if (!ans) return '';
-  return ans.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Strip letter/key prefix like "A: ", "B: ", "C - ", etc.
+  const cleaned = ans.replace(/^[a-zA-Z]\s*[:\.\-]\s*/, '');
+  return cleaned.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 /**
@@ -207,17 +209,19 @@ export function calculateMatchScore(
 
     const isMatch =
       userNorm === candNorm ||
-      userNorm.includes(candNorm) ||
-      candNorm.includes(userNorm);
+      (userNorm.length > 3 && candNorm.includes(userNorm)) ||
+      (candNorm.length > 3 && userNorm.includes(candNorm));
 
     if (isMatch) {
       matches++;
+      // Clean display option text (strip "A: ", "B: ", etc. if present)
+      const cleanOptionText = userRaw.replace(/^[a-zA-Z]\s*[:\.\-]\s*/, '');
       shared.push({
         questionNumber: q.number,
         category: q.category,
         questionText: q.question,
         selectedOption: userRaw,
-        optionText: userRaw,
+        optionText: cleanOptionText,
       });
     }
   }
