@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { Participant } from '../../types';
+import type { BingoBoard, Participant } from '../../types';
 import { AppDataStore } from '../../lib/store';
 import type { MatchedProfile } from '../../lib/matchingAlgorithm';
+import { evaluateBingoBoard, BINGO_SPELL } from '../../lib/bingoLogic';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -12,7 +13,10 @@ import {
   Users, 
   ChevronDown, 
   ChevronUp,
-  Share2
+  Share2,
+  Lock,
+  Scissors,
+  ArrowRight
 } from 'lucide-react';
 import { fireBingoConfetti } from '../common/Confetti';
 
@@ -34,12 +38,14 @@ const InstagramIcon: React.FC<{ className?: string }> = ({ className = "w-3.5 h-
 
 interface MatchesPageProps {
   participant: Participant;
+  board?: BingoBoard | null;
   onBackToBingo: () => void;
   onViewConnections: () => void;
 }
 
 export const MatchesPage: React.FC<MatchesPageProps> = ({
   participant,
+  board,
   onBackToBingo,
   onViewConnections,
 }) => {
@@ -48,8 +54,18 @@ export const MatchesPage: React.FC<MatchesPageProps> = ({
   const [filter, setFilter] = useState<'all' | 'high' | 'soulmate'>('all');
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
 
+  // Check if all 5 letters in "B-I-N-G-O" are cut
+  const evalResult = board ? evaluateBingoBoard(board.letters, board.completed_letters) : null;
+  const isUnlocked = evalResult ? evalResult.isFullBingoWon : false;
+
   useEffect(() => {
     let isMounted = true;
+
+    // Only load matched profiles if all letters in "BINGO" are cut
+    if (!isUnlocked) {
+      setIsLoading(false);
+      return;
+    }
 
     async function loadMatches() {
       setIsLoading(true);
@@ -77,7 +93,7 @@ export const MatchesPage: React.FC<MatchesPageProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [participant.id]);
+  }, [participant.id, isUnlocked]);
 
   const filteredMatches = matches.filter((m) => {
     if (filter === 'soulmate') return m.matchScore >= 80;
@@ -90,6 +106,116 @@ export const MatchesPage: React.FC<MatchesPageProps> = ({
     if (score >= 65) return 'bg-amber-50 text-amber-800 border-amber-300';
     return 'bg-[#F4F8F9] text-[#0B3B3D] border-[#A3C4CB]/50';
   };
+
+  // If all 5 letters in B-I-N-G-O are NOT cut yet, display the locked state
+  if (!isUnlocked) {
+    const cutCount = evalResult ? evalResult.cutLetters.length : 0;
+    return (
+      <div className="flex-1 flex flex-col justify-between items-center max-w-md mx-auto w-full px-5 py-8 text-center animate-in fade-in duration-300 min-h-[85vh]">
+        {/* Top Navigation */}
+        <div className="w-full flex items-center justify-between mb-4">
+          <button
+            onClick={onBackToBingo}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B3B3D] hover:text-[#E05A47] transition-colors py-1.5 px-3 rounded-full bg-[#F4F8F9] hover:bg-[#FDF2F0] cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#E05A47]" />
+            <span>Back to Bingo</span>
+          </button>
+
+          <button
+            onClick={onViewConnections}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E05A47] bg-[#FDF2F0] hover:bg-[#FCEEE8] px-3 py-1.5 rounded-full border border-[#E05A47]/30 transition-colors cursor-pointer"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>My Connections</span>
+          </button>
+        </div>
+
+        {/* Lock Hero Card */}
+        <div className="my-auto py-4 space-y-5 max-w-sm w-full">
+          {/* Animated Lock Badge */}
+          <div className="w-20 h-20 rounded-full bg-[#FDF2F0] border-2 border-[#E05A47] flex items-center justify-center text-[#E05A47] mx-auto shadow-md">
+            <Lock className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDF2F0] border border-[#F3BEB5] text-xs font-bold text-[#E05A47] uppercase tracking-wider">
+              <span>Full B-I-N-G-O Required</span>
+            </div>
+
+            <h2
+              className="text-3xl font-medium text-[#0B3B3D] tracking-tight"
+              style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+            >
+              Personality Matches Locked
+            </h2>
+
+            <p className="text-xs sm:text-sm text-[#0B3B3D]/75 leading-relaxed">
+              Matched profiles will only show after all 5 letters in <strong>B-I-N-G-O</strong> are cut on your board.
+            </p>
+          </div>
+
+          {/* Visual 5-Letter B-I-N-G-O Strike Tracker */}
+          <div className="p-4 rounded-3xl bg-[#F4F8F9] border border-[#A3C4CB]/40 space-y-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0B3B3D]">
+              <span className="flex items-center gap-1.5">
+                <Scissors className="w-3.5 h-3.5 text-[#E05A47]" />
+                <span>B-I-N-G-O Letter Progress</span>
+              </span>
+              <span className="text-[#E05A47] font-bold">
+                {cutCount} / 5 Letters Cut
+              </span>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2">
+              {BINGO_SPELL.map((char, i) => {
+                const isCut = i < cutCount;
+                return (
+                  <div
+                    key={char}
+                    className={`relative p-2.5 rounded-2xl flex flex-col items-center justify-center aspect-square ${
+                      isCut
+                        ? 'bg-[#FDF2F0] border border-[#E05A47] text-[#D34E2A] font-bold shadow-2xs'
+                        : 'bg-white border border-[#A3C4CB]/40 text-[#0B3B3D]/40 font-medium'
+                    }`}
+                  >
+                    <span
+                      className="font-serif text-2xl leading-none"
+                      style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
+                    >
+                      {char}
+                    </span>
+                    {isCut && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                        <svg viewBox="0 0 100 100" className="w-full h-full text-[#D34E2A]" preserveAspectRatio="none">
+                          <line x1="15" y1="85" x2="85" y2="15" stroke="currentColor" strokeWidth="12" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-[11px] text-[#0B3B3D]/70 pt-1">
+              Complete {5 - cutCount} more {5 - cutCount === 1 ? 'line' : 'lines'} on your board to cut all letters in B-I-N-G-O and reveal your matches!
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom CTA to Return to Bingo */}
+        <div className="w-full pt-6 space-y-2">
+          <button
+            onClick={onBackToBingo}
+            className="w-full py-4 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-medium text-sm shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Return to Bingo & Cut More Lines</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col max-w-xl mx-auto w-full px-4 py-5 animate-in fade-in duration-300 font-sans pb-12">

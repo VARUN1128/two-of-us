@@ -5,7 +5,7 @@ import { BingoInteractionModal } from './BingoInteractionModal';
 import { BingoSuccessNotification } from './BingoSuccessNotification';
 import { BingoLetterTracker } from '../common/BingoLetterTracker';
 import { ProgressBar } from '../common/ProgressBar';
-import { Users, Award, Trophy, Check, ArrowRight, Download, Smartphone } from 'lucide-react';
+import { Users, Award, Trophy, Check, ArrowRight, Download, Smartphone, Lock } from 'lucide-react';
 import { AppDataStore } from '../../lib/store';
 import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
 
@@ -109,19 +109,32 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
           </p>
         </div>
 
-        {/* Action Shortcuts: Matches & Connections Diary */}
+        {/* Action Shortcuts: Matches (Unlocked ONLY when all 5 B-I-N-G-O letters cut) & Connections Diary */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={onViewMatches}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
-              evalResult.completedCount > 0
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
+              evalResult.isFullBingoWon
                 ? 'bg-[#E05A47] hover:bg-[#C44633] border-[#E05A47] text-white animate-pulse-subtle'
-                : 'bg-[#FDF2F0] hover:bg-[#FCEEE8] border-[#F3BEB5] text-[#D34E2A]'
+                : 'bg-[#F4F8F9] hover:bg-[#FDF2F0] border-[#A3C4CB]/50 text-[#0B3B3D]/70'
             }`}
-            title="View personality matches"
+            title={
+              evalResult.isFullBingoWon
+                ? 'All 5 BINGO letters cut! View your personality matches'
+                : `Cut all 5 letters in BINGO to unlock matches (${evalResult.cutLetters.length}/5 cut)`
+            }
           >
-            <span>Matches</span>
-            <span>💖</span>
+            {evalResult.isFullBingoWon ? (
+              <>
+                <span>Matches</span>
+                <span>💖</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3 h-3 text-[#0B3B3D]/50" />
+                <span>Matches ({evalResult.cutLetters.length}/5)</span>
+              </>
+            )}
           </button>
 
           <button
@@ -174,27 +187,35 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
       {/* B-I-N-G-O Strike Tracker (Each completed line cuts B, then I, then N, then G, then O) */}
       <div className="mb-4">
         <BingoLetterTracker completedLinesCount={evalResult.completedCount} />
+        {!evalResult.isFullBingoWon && (
+          <div className="mt-2 text-center text-[11px] text-[#0B3B3D]/70 flex items-center justify-center gap-1.5 bg-[#FDF2F0] py-1.5 px-3 rounded-xl border border-[#F3BEB5]/60">
+            <Lock className="w-3 h-3 text-[#E05A47] shrink-0" />
+            <span>
+              Cut all letters in <strong>B-I-N-G-O</strong> to unlock Personality Matches ({evalResult.cutLetters.length}/5 cut)
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Personality Matches Unlocked Banner if at least 1 line or full bingo is won */}
-      {evalResult.completedCount > 0 && (
+      {/* Personality Matches Unlocked Banner: ONLY SHOWN WHEN ALL 5 LETTERS IN B-I-N-G-O ARE CUT */}
+      {evalResult.isFullBingoWon && (
         <div 
           onClick={onViewMatches}
-          className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-[#FDF2F0] via-[#FFF6F4] to-[#FCEEE8] border border-[#F3BEB5] flex items-center justify-between cursor-pointer hover:shadow-xs transition-all duration-200 group"
+          className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-[#FDF2F0] via-[#FFF6F4] to-[#FCEEE8] border-2 border-[#E05A47] flex items-center justify-between cursor-pointer hover:shadow-md transition-all duration-200 group animate-pulse-subtle"
           role="button"
           tabIndex={0}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#E05A47] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-full bg-[#E05A47] text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 group-hover:scale-110 transition-transform">
               💖
             </div>
             <div className="text-left">
               <div className="text-xs font-bold text-[#0B3B3D] flex items-center gap-1.5">
-                <span>Personality Matches Unlocked!</span>
-                <span className="text-[10px] bg-[#E05A47] text-white px-1.5 py-0.2 rounded-full font-bold">New</span>
+                <span>All 5 B-I-N-G-O Letters Cut!</span>
+                <span className="text-[10px] bg-[#E05A47] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Matches Unlocked</span>
               </div>
-              <div className="text-[11px] text-[#D34E2A] font-medium">
-                Tap to see profiles with your highest compatibility
+              <div className="text-[11px] text-[#D34E2A] font-semibold">
+                Tap to see profiles with your highest personality matches
               </div>
             </div>
           </div>

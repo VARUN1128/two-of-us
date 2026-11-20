@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import type { WinningLine } from '../../types';
-import { Trophy, Sparkles, X, Scissors, Award } from 'lucide-react';
+import { Trophy, Sparkles, X, Scissors, Award, Lock } from 'lucide-react';
 import { fireBingoConfetti } from '../common/Confetti';
 import { BINGO_SPELL } from '../../lib/bingoLogic';
 
@@ -136,23 +136,32 @@ export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> =
         </div>
 
         <div className="space-y-2 pt-1">
-          {onViewMatches && (
+          {onViewMatches && isFullBingoNow && (
             <button
               onClick={() => {
                 onDismiss();
                 onViewMatches();
               }}
-              className="w-full py-3 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-semibold text-xs transition-all active:scale-98 shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-3 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-semibold text-xs transition-all active:scale-98 shadow-md cursor-pointer flex items-center justify-center gap-1.5 animate-pulse-subtle"
             >
               <Sparkles className="w-4 h-4" />
               <span>See Top Personality Matches 💖</span>
             </button>
           )}
 
+          {!isFullBingoNow && (
+            <div className="p-2.5 rounded-xl bg-[#FDF2F0] border border-[#F3BEB5] text-[11px] text-[#0B3B3D]/80 flex items-center justify-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#E05A47] shrink-0" />
+              <span>
+                Cut all 5 letters in <strong>B-I-N-G-O</strong> to unlock matches ({cutCount}/5 cut)
+              </span>
+            </div>
+          )}
+
           <button
             onClick={onDismiss}
             className={`w-full py-2.5 px-6 rounded-2xl text-xs font-semibold transition-all active:scale-98 cursor-pointer ${
-              onViewMatches
+              onViewMatches && isFullBingoNow
                 ? 'bg-[#F4F8F9] hover:bg-[#FDF2F0] text-[#0B3B3D]'
                 : 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-md'
             }`}

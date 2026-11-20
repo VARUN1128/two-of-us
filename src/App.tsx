@@ -328,6 +328,7 @@ export default function App() {
               participant ? (
                 <MatchesPage
                   participant={participant}
+                  board={board}
                   onBackToBingo={() => navigate('/bingo')}
                   onViewConnections={() => navigate('/connections')}
                 />
