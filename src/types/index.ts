@@ -63,6 +63,7 @@ export type AppStage =
   | 'questionnaire' 
   | 'questionnaire_complete' 
   | 'bingo' 
+  | 'matches'
   | 'connections' 
   | 'board_completed' 
   | 'admin';

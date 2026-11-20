@@ -7,11 +7,13 @@ import type { BingoBoard } from '../../types';
 interface CompletionPageProps {
   board: BingoBoard;
   onViewConnections: () => void;
+  onViewMatches?: () => void;
 }
 
 export const CompletionPage: React.FC<CompletionPageProps> = ({
   board,
   onViewConnections,
+  onViewMatches,
 }) => {
   useEffect(() => {
     fireBingoConfetti(true);
@@ -96,12 +98,26 @@ export const CompletionPage: React.FC<CompletionPageProps> = ({
       </div>
 
       <div className="w-full pb-4 space-y-3">
+        {onViewMatches && (
+          <button
+            onClick={onViewMatches}
+            className="w-full py-4 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-medium text-base shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
+          >
+            <span>See Top Personality Matches 💖</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        )}
+
         <button
           onClick={onViewConnections}
-          className="w-full py-4 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-medium text-base shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 group cursor-pointer"
+          className={`w-full py-3.5 px-6 rounded-2xl font-medium text-sm transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer ${
+            onViewMatches
+              ? 'bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A]'
+              : 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-md'
+          }`}
         >
+          <Users className="w-4 h-4" />
           <span>View All Your 25 Connections</span>
-          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
     </div>

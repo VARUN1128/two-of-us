@@ -10,6 +10,12 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import { generateRandomBoardLetters } from '../constants/config';
 import { evaluateBingoBoard } from './bingoLogic';
 import { compressImage } from './imageCompression';
+import { 
+  CURATED_EVENT_ATTENDEES, 
+  rankMatchedProfiles, 
+  type MatchedProfile, 
+  type CandidateProfile 
+} from './matchingAlgorithm';
 
 const STORAGE_KEY_PREFIX = 'two_of_us_';
 const SESSION_PARTICIPANT_KEY = `${STORAGE_KEY_PREFIX}current_participant_id`;
@@ -335,6 +341,92 @@ export class AppDataStore {
       });
 
     return result;
+  }
+
+  /**
+   * Get top personality matched profiles for a participant
+   */
+  static async getTopMatchedProfiles(participantId: string): Promise<MatchedProfile[]> {
+    const userAnswers = await this.getQuestionnaireAnswers(participantId);
+
+    // Load other participants from local store, curated list, and Supabase
+    const candidateMap = new Map<string, CandidateProfile>();
+
+    // 1. Add curated attendee profiles
+    for (const curated of CURATED_EVENT_ATTENDEES) {
+      candidateMap.set(curated.id, curated);
+    }
+
+    // 2. Add real attendees from local store
+    const localParticipants = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const localAnswers = getLocal<QuestionnaireAnswer[]>(LOCAL_ANSWERS_KEY, []);
+
+    for (const p of localParticipants) {
+      if (p.id === participantId) continue;
+      const ansMap: Record<number, string> = {};
+      localAnswers
+        .filter((a) => a.participant_id === p.id)
+        .forEach((a) => {
+          ansMap[a.question_number] = a.selected_option;
+        });
+
+      if (Object.keys(ansMap).length > 0) {
+        candidateMap.set(p.id, {
+          id: p.id,
+          fullName: p.full_name,
+          instagramId: p.instagram_id,
+          answers: ansMap,
+          isRealAttendee: true,
+        });
+      }
+    }
+
+    // 3. Add real attendees from Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: remoteParticipants } = await supabase
+          .from('participants')
+          .select('id, full_name, instagram_id')
+          .neq('id', participantId)
+          .eq('questionnaire_completed', true);
+
+        if (remoteParticipants && remoteParticipants.length > 0) {
+          const remoteIds = remoteParticipants.map((r) => r.id);
+          const { data: remoteAnswers } = await supabase
+            .from('questionnaire_answers')
+            .select('participant_id, question_number, selected_option')
+            .in('participant_id', remoteIds);
+
+          if (remoteAnswers) {
+            const remoteAnsByParticipant = new Map<string, Record<number, string>>();
+            remoteAnswers.forEach((row) => {
+              if (!remoteAnsByParticipant.has(row.participant_id)) {
+                remoteAnsByParticipant.set(row.participant_id, {});
+              }
+              remoteAnsByParticipant.get(row.participant_id)![row.question_number] = row.selected_option;
+            });
+
+            remoteParticipants.forEach((p) => {
+              const answers = remoteAnsByParticipant.get(p.id);
+              if (answers && Object.keys(answers).length > 0) {
+                candidateMap.set(p.id, {
+                  id: p.id,
+                  fullName: p.full_name,
+                  instagramId: p.instagram_id,
+                  answers,
+                  isRealAttendee: true,
+                });
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase matches query error (falling back to local):', err);
+      }
+    }
+
+    const candidates = Array.from(candidateMap.values());
+    return rankMatchedProfiles(userAnswers, candidates, participantId);
   }
 
   /**

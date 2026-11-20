@@ -15,6 +15,7 @@ import { RegistrationPage } from './components/screens/RegistrationPage';
 import { QuestionnairePage } from './components/screens/QuestionnairePage';
 import { QuestionnaireCompletion } from './components/screens/QuestionnaireCompletion';
 import { HumanBingoPage } from './components/screens/HumanBingoPage';
+import { MatchesPage } from './components/screens/MatchesPage';
 import { MyConnectionsPage } from './components/screens/MyConnectionsPage';
 import { CompletionPage } from './components/screens/CompletionPage';
 import { AdminDashboard } from './components/screens/AdminDashboard';
@@ -35,6 +36,7 @@ export default function App() {
   const getStageFromPath = (path: string): AppStage => {
     if (path.startsWith('/admin')) return 'admin';
     if (path.startsWith('/connections')) return 'connections';
+    if (path.startsWith('/matches')) return 'matches';
     if (path.startsWith('/completed')) return 'board_completed';
     if (path.startsWith('/bingo')) return 'bingo';
     if (path.startsWith('/questionnaire/complete')) return 'questionnaire_complete';
@@ -172,6 +174,9 @@ export default function App() {
       case 'bingo':
         navigate('/bingo');
         break;
+      case 'matches':
+        navigate('/matches');
+        break;
       case 'connections':
         navigate('/connections');
         break;
@@ -307,7 +312,24 @@ export default function App() {
                   connections={connections}
                   onBoardUpdated={handleBoardUpdated}
                   onViewConnections={() => navigate('/connections')}
+                  onViewMatches={() => navigate('/matches')}
                   onFullBoardCompleted={() => navigate('/completed')}
+                />
+              ) : (
+                <Navigate to="/welcome" replace />
+              )
+            }
+          />
+
+          {/* Personality Matches Screen */}
+          <Route
+            path="/matches"
+            element={
+              participant ? (
+                <MatchesPage
+                  participant={participant}
+                  onBackToBingo={() => navigate('/bingo')}
+                  onViewConnections={() => navigate('/connections')}
                 />
               ) : (
                 <Navigate to="/welcome" replace />
@@ -339,6 +361,7 @@ export default function App() {
                 <CompletionPage
                   board={board}
                   onViewConnections={() => navigate('/connections')}
+                  onViewMatches={() => navigate('/matches')}
                 />
               ) : (
                 <Navigate to="/welcome" replace />

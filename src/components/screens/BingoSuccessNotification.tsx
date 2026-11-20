@@ -9,6 +9,7 @@ interface BingoSuccessNotificationProps {
   totalCompletedLinesCount: number;
   newlyCutLetters?: string[];
   onDismiss: () => void;
+  onViewMatches?: () => void;
 }
 
 export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> = ({
@@ -16,6 +17,7 @@ export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> =
   totalCompletedLinesCount,
   newlyCutLetters = [],
   onDismiss,
+  onViewMatches,
 }) => {
   const cutCount = Math.min(5, Math.max(0, totalCompletedLinesCount));
   const isFullBingoNow = totalCompletedLinesCount >= 5;
@@ -133,10 +135,27 @@ export const BingoSuccessNotification: React.FC<BingoSuccessNotificationProps> =
           ))}
         </div>
 
-        <div>
+        <div className="space-y-2 pt-1">
+          {onViewMatches && (
+            <button
+              onClick={() => {
+                onDismiss();
+                onViewMatches();
+              }}
+              className="w-full py-3 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-semibold text-xs transition-all active:scale-98 shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>See Top Personality Matches 💖</span>
+            </button>
+          )}
+
           <button
             onClick={onDismiss}
-            className="w-full py-3 px-6 rounded-2xl bg-[#E05A47] hover:bg-[#C44633] text-white font-semibold text-xs transition-all active:scale-98 shadow-md cursor-pointer"
+            className={`w-full py-2.5 px-6 rounded-2xl text-xs font-semibold transition-all active:scale-98 cursor-pointer ${
+              onViewMatches
+                ? 'bg-[#F4F8F9] hover:bg-[#FDF2F0] text-[#0B3B3D]'
+                : 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-md'
+            }`}
           >
             Keep Playing & Connecting
           </button>

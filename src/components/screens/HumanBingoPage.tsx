@@ -15,6 +15,7 @@ interface HumanBingoPageProps {
   connections: BingoConnection[];
   onBoardUpdated: (board: BingoBoard, newConnections: BingoConnection[]) => void;
   onViewConnections: () => void;
+  onViewMatches: () => void;
   onFullBoardCompleted: () => void;
 }
 
@@ -24,6 +25,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
   connections,
   onBoardUpdated,
   onViewConnections,
+  onViewMatches,
   onFullBoardCompleted,
 }) => {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -107,18 +109,33 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
           </p>
         </div>
 
-        {/* Connections Diary Shortcut */}
-        <button
-          onClick={onViewConnections}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold shadow-2xs transition-colors cursor-pointer shrink-0"
-          title="View your connections diary"
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Diary</span>
-          <span className="w-4 h-4 rounded-full bg-[#D34E2A] text-white flex items-center justify-center text-[10px] font-bold">
-            {connections.length}
-          </span>
-        </button>
+        {/* Action Shortcuts: Matches & Connections Diary */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={onViewMatches}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
+              evalResult.completedCount > 0
+                ? 'bg-[#E05A47] hover:bg-[#C44633] border-[#E05A47] text-white animate-pulse-subtle'
+                : 'bg-[#FDF2F0] hover:bg-[#FCEEE8] border-[#F3BEB5] text-[#D34E2A]'
+            }`}
+            title="View personality matches"
+          >
+            <span>Matches</span>
+            <span>💖</span>
+          </button>
+
+          <button
+            onClick={onViewConnections}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            title="View your connections diary"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Diary</span>
+            <span className="w-4 h-4 rounded-full bg-[#D34E2A] text-white flex items-center justify-center text-[10px] font-bold">
+              {connections.length}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Metrics Bar */}
@@ -158,6 +175,32 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
       <div className="mb-4">
         <BingoLetterTracker completedLinesCount={evalResult.completedCount} />
       </div>
+
+      {/* Personality Matches Unlocked Banner if at least 1 line or full bingo is won */}
+      {evalResult.completedCount > 0 && (
+        <div 
+          onClick={onViewMatches}
+          className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-[#FDF2F0] via-[#FFF6F4] to-[#FCEEE8] border border-[#F3BEB5] flex items-center justify-between cursor-pointer hover:shadow-xs transition-all duration-200 group"
+          role="button"
+          tabIndex={0}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-[#E05A47] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+              💖
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-[#0B3B3D] flex items-center gap-1.5">
+                <span>Personality Matches Unlocked!</span>
+                <span className="text-[10px] bg-[#E05A47] text-white px-1.5 py-0.2 rounded-full font-bold">New</span>
+              </div>
+              <div className="text-[11px] text-[#D34E2A] font-medium">
+                Tap to see profiles with your highest compatibility
+              </div>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-[#E05A47] group-hover:translate-x-1 transition-transform shrink-0" />
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="mb-4">
@@ -277,6 +320,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
           newlyCompletedLines={newlyCompletedLines}
           totalCompletedLinesCount={evalResult.completedCount}
           newlyCutLetters={notificationCutLetters}
+          onViewMatches={onViewMatches}
           onDismiss={() => {
             setNewlyCompletedLines([]);
             setNotificationCutLetters([]);
