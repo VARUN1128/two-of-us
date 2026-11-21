@@ -93,14 +93,14 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between max-w-lg mx-auto w-full px-5 py-6 animate-in fade-in duration-300">
+    <div className="h-[100dvh] max-h-[100dvh] flex flex-col justify-between max-w-md md:max-w-lg mx-auto w-full px-4 sm:px-6 py-3 sm:py-5 overflow-hidden animate-in fade-in duration-300 select-none">
       {/* Top Progress & Category */}
-      <div className="space-y-3">
+      <div className="shrink-0 space-y-2">
         <div className="flex items-center justify-between">
           <button
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-2 -ml-2 rounded-lg transition-colors ${
+            className={`inline-flex items-center gap-1 text-xs font-medium py-1 px-2 -ml-2 rounded-lg transition-colors cursor-pointer ${
               currentIndex === 0
                 ? 'opacity-0 pointer-events-none'
                 : 'text-[#0B3B3D]/70 hover:text-[#E05A47] hover:bg-[#F4F8F9]'
@@ -110,7 +110,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
             <span>Previous</span>
           </button>
 
-          <span className="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#FDF2F0] text-[#E05A47] border border-[#E05A47]/20">
+          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase px-2.5 py-0.5 sm:py-1 rounded-full bg-[#FDF2F0] text-[#E05A47] border border-[#E05A47]/20">
             {currentQ.category}
           </span>
 
@@ -126,14 +126,14 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
         />
       </div>
 
-      {/* Center: Question and 4 Selectable Answer Cards */}
-      <div className="my-auto py-6 space-y-6">
-        <div className="space-y-2">
-          <div className="text-xs text-[#E05A47] font-semibold tracking-wide">
+      {/* Center: Question and 4 Selectable Answer Cards (Always fits without scroll) */}
+      <div className="flex-1 flex flex-col justify-center my-auto py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-y-auto min-h-0">
+        <div className="space-y-1 sm:space-y-1.5 shrink-0">
+          <div className="text-[11px] sm:text-xs text-[#E05A47] font-semibold tracking-wide">
             Question 0{currentQ.number}
           </div>
           <h2
-            className="text-2xl md:text-3xl font-medium text-[#0B3B3D] leading-snug"
+            className="text-xl sm:text-2xl md:text-3xl font-medium text-[#0B3B3D] leading-snug"
             style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
           >
             {currentQ.question}
@@ -141,7 +141,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
         </div>
 
         {/* 4 Answer Cards */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-2.5">
           {currentQ.options.map((option) => {
             const isSelected = currentAnswer?.startsWith(option.key);
 
@@ -149,16 +149,16 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
               <div
                 key={option.key}
                 onClick={() => handleSelectOption(option)}
-                className={`group relative p-4 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] flex items-center justify-between gap-3 ${
+                className={`group relative py-2.5 px-3.5 sm:py-3.5 sm:px-4 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] flex items-center justify-between gap-3 ${
                   isSelected
                     ? 'bg-[#FDF2F0] border-[#E05A47] shadow-xs'
                     : 'bg-white border-[#A3C4CB]/50 hover:border-[#E05A47]/60 hover:bg-[#F4F8F9]'
                 }`}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3">
                   {/* Key Badge (A, B, C, D) */}
                   <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
+                    className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
                       isSelected
                         ? 'bg-[#E05A47] text-white'
                         : 'bg-[#F4F8F9] text-[#0B3B3D]/80 group-hover:bg-[#A3C4CB]/30'
@@ -167,7 +167,7 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
                     {option.key}
                   </span>
                   <span
-                    className={`text-sm font-medium leading-snug ${
+                    className={`text-xs sm:text-sm font-medium leading-snug ${
                       isSelected ? 'text-[#0B3B3D] font-semibold' : 'text-[#0B3B3D]/90'
                     }`}
                   >
@@ -177,13 +177,13 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
 
                 {/* Selection Checkmark */}
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
                     isSelected
                       ? 'bg-[#E05A47] border-[#E05A47] text-white scale-100'
                       : 'border-[#A3C4CB]/40 bg-transparent opacity-0 group-hover:opacity-40'
                   }`}
                 >
-                  <Check className="w-3 h-3 stroke-[3]" />
+                  <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                 </div>
               </div>
             );
@@ -191,14 +191,14 @@ export const QuestionnairePage: React.FC<QuestionnairePageProps> = ({
         </div>
       </div>
 
-      {/* Bottom Continue Action */}
-      <div className="pt-4">
+      {/* Bottom Continue Action (Always anchored and visible in viewport) */}
+      <div className="shrink-0 pt-2 sm:pt-3 pb-1">
         <button
           onClick={handleNext}
           disabled={!currentAnswer || isSaving}
-          className={`w-full py-3.5 px-6 rounded-2xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md ${
+          className={`w-full py-3 sm:py-3.5 px-6 rounded-xl sm:rounded-2xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md ${
             currentAnswer && !isSaving
-              ? 'bg-[#E05A47] hover:bg-[#C44633] text-white active:scale-98'
+              ? 'bg-[#D34E2A] hover:bg-[#BA3F1E] text-white active:scale-98 shadow-[0_4px_14px_rgba(211,78,42,0.25)]'
               : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed shadow-none'
           }`}
         >

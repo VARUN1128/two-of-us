@@ -19,8 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   onSignOut,
 }) => {
-  // On welcome page and bingo board, hide the top header as requested
-  if (stage === 'welcome' || stage === 'bingo') {
+  // On welcome page, bingo board, and questionnaire, hide the top header so screen content fits without scrolling
+  if (stage === 'welcome' || stage === 'bingo' || stage === 'questionnaire') {
     return null;
   }
 
