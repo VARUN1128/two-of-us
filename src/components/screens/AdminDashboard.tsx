@@ -153,7 +153,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
   // Auth Gate
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-sm mx-auto w-full font-sans">
+      <div className="relative min-h-[85vh] flex-1 flex flex-col items-center justify-center p-6 max-w-sm mx-auto w-full font-sans">
+        {/* Corner Logo */}
+        <button
+          onClick={onBackToApp}
+          className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-2 cursor-pointer group focus:outline-none"
+          title="Return to Event App"
+        >
+          <img
+            src="/brand-fox-heart-logo.png"
+            alt="Two of Us Logo"
+            className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+          />
+        </button>
+
         <div className="w-full p-6 rounded-3xl bg-white border border-[#A3C4CB]/50 shadow-xl space-y-5 text-center">
           <div className="w-12 h-12 rounded-2xl bg-[#FDF2F0] border border-[#E05A47]/20 flex items-center justify-center text-[#E05A47] mx-auto shadow-xs">
             <Shield className="w-6 h-6" />
@@ -219,43 +232,43 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
   }
 
   return (
-    <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 font-sans space-y-6 animate-in fade-in duration-300">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#A3C4CB]/30">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBackToApp}
-            className="p-2 rounded-xl border border-[#A3C4CB]/40 hover:bg-[#F4F8F9] text-[#0B3B3D] cursor-pointer"
-            title="Back to App"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2
-                className="text-2xl font-semibold text-[#0B3B3D]"
-                style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
-              >
-                Organizer Command Center
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#FDF2F0] text-[#E05A47] text-[10px] font-bold uppercase tracking-wider">
-                Live Admin
-              </span>
-            </div>
-            <p className="text-xs text-[#0B3B3D]/70">
-              Live participant monitoring, networking activity & selfie tracking
-            </p>
-          </div>
-        </div>
+    <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-4 sm:py-5 font-sans space-y-5 animate-in fade-in duration-300">
+      {/* Corner Logo & Action Bar (Header removed) */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        {/* Corner Logo */}
+        <button
+          onClick={onBackToApp}
+          className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+          title="Return to Event App"
+        >
+          <img
+            src="/brand-fox-heart-logo.png"
+            alt="Two of Us Logo"
+            className="w-9 h-9 object-contain group-hover:scale-105 transition-transform"
+          />
+          <span className="text-[11px] font-bold tracking-wider uppercase text-[#E05A47] bg-[#FDF2F0] px-2 py-0.5 rounded-full border border-[#E05A47]/20">
+            Admin
+          </span>
+        </button>
 
+        {/* Minimal Controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#A3C4CB]/50 text-xs font-medium text-[#0B3B3D] hover:bg-[#F4F8F9] transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3C4CB]/50 text-xs font-medium text-[#0B3B3D] hover:bg-[#F4F8F9] transition-all cursor-pointer"
+            title="Refresh participant & selfie data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#E05A47]' : ''}`} />
-            <span>Refresh Data</span>
+            <span className="hidden sm:inline">Refresh Data</span>
+          </button>
+          <button
+            onClick={onBackToApp}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#F4F8F9] hover:bg-[#FDF2F0] text-[#0B3B3D] hover:text-[#E05A47] text-xs font-medium transition-colors cursor-pointer border border-[#A3C4CB]/30"
+            title="Return to App"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back</span>
           </button>
         </div>
       </div>

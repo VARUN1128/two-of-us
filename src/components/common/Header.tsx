@@ -19,8 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   onSignOut,
 }) => {
-  // On welcome page, bingo board, and questionnaire, hide the top header so screen content fits without scrolling
-  if (stage === 'welcome' || stage === 'bingo' || stage === 'questionnaire') {
+  // On welcome page, bingo board, questionnaire, and admin, hide the top header
+  if (stage === 'welcome' || stage === 'bingo' || stage === 'questionnaire' || stage === 'admin') {
     return null;
   }
 
@@ -45,9 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <button
               onClick={() => {
-                if (stage === 'admin') {
-                  onNavigate(participant ? (participant.questionnaire_completed ? 'bingo' : 'questionnaire') : 'welcome');
-                } else if (!participant) {
+                if (!participant) {
                   onNavigate('welcome');
                 }
               }}
@@ -98,11 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Admin shortcut shield button */}
           <button
             onClick={onOpenAdmin}
-            className={`p-2 rounded-full transition-colors ${
-              stage === 'admin'
-                ? 'bg-[#E05A47] text-white'
-                : 'text-[#0B3B3D]/70 hover:text-[#E05A47] hover:bg-[#F4F8F9]/80'
-            }`}
+            className="p-2 rounded-full transition-colors text-[#0B3B3D]/70 hover:text-[#E05A47] hover:bg-[#F4F8F9]/80"
             title="Organizer Command Center"
             aria-label="Organizer Command Center"
           >
