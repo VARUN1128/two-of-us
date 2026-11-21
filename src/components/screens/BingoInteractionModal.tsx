@@ -3,19 +3,13 @@ import { RANDOM_QUESTION_BANK } from '../../constants/questions';
 import { 
   X, 
   Camera, 
-  Upload, 
   CheckSquare, 
   Square, 
   ArrowRight, 
   RotateCw, 
   CheckCircle2, 
-  AlertCircle,
-  Download,
-  Smartphone,
-  ShieldCheck,
-  Check
+  AlertCircle
 } from 'lucide-react';
-import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
 
 interface BingoInteractionModalProps {
   isOpen: boolean;
@@ -53,20 +47,19 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Validation & Submission
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [savedToPhone, setSavedToPhone] = useState(false);
 
-  const handleManualSaveToPhone = async () => {
-    if (!selfieSource) return;
-    const source = selfieFile || selfieSource;
-    await savePhotoToPhoneDevice(source, letter, personName);
-    setSavedToPhone(true);
-    setTimeout(() => setSavedToPhone(false), 2500);
-  };
+  // Attach video stream whenever camera becomes active or stream updates
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch((err) => console.warn('Video playback error:', err));
+    }
+  }, [isCameraActive]);
 
   // Pick or load fixed random question for this letter session
   useEffect(() => {
@@ -107,24 +100,35 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
   const startCamera = async () => {
     stopCamera();
     setCameraError(null);
+
+    // If getUserMedia is not supported in this browser, open device camera directly
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraInputRef.current?.click();
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+          audio: false,
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
       }
-      setIsCameraActive(true);
+
+      if (stream) {
+        streamRef.current = stream;
+        setIsCameraActive(true);
+      }
     } catch (err) {
-      console.warn('Camera access error:', err);
-      setCameraError('Camera access unavailable. You can upload a photo from your gallery instead.');
-      setIsCameraActive(false);
+      console.warn('getUserMedia error, opening native camera app:', err);
+      // Fallback: Trigger device's native front camera directly
+      cameraInputRef.current?.click();
     }
   };
 
@@ -135,13 +139,10 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
       stopCamera();
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: nextMode },
+          video: { facingMode: { ideal: nextMode } },
           audio: false,
         });
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
         setIsCameraActive(true);
       } catch (e) {
         console.warn('Failed to switch camera:', e);
@@ -171,7 +172,8 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
     stopCamera();
   };
 
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle photo captured from phone's native front camera
+  const handleNativeCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelfieFile(file);
@@ -198,12 +200,16 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
     }
     setErrorMsg(null);
     setStep(2);
+    // Automatically open camera when moving to Step 2
+    setTimeout(() => {
+      startCamera();
+    }, 120);
   };
 
   // Step 2 Validation
   const handleValidateStep2 = () => {
     if (!selfieSource) {
-      setErrorMsg('Please take or upload a selfie together.');
+      setErrorMsg('Please take a selfie together.');
       return;
     }
     if (!photoConsent) {
@@ -233,13 +239,6 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
     setErrorMsg(null);
 
     const source = selfieFile || selfieSource;
-
-    // Automatically trigger saving the selfie directly into the user's phone files/photos
-    try {
-      await savePhotoToPhoneDevice(source, letter, personName);
-    } catch (e) {
-      console.warn('Auto-save to phone non-fatal error:', e);
-    }
 
     const result = await onSubmit({
       letter: letter.toUpperCase(),
@@ -391,7 +390,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   Capture the moment with {personName}
                 </h4>
                 <p className="text-xs text-[#0B3B3D]/75">
-                  Take a quick selfie together or choose one from your gallery.
+                  Take a quick selfie together with {personName}.
                 </p>
               </div>
 
@@ -407,22 +406,15 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     <div className="absolute top-2 right-2 flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={handleManualSaveToPhone}
-                        className="px-2.5 py-1 rounded-full bg-white/90 text-[#D34E2A] hover:bg-white text-[11px] font-semibold flex items-center gap-1 shadow-sm"
-                        title="Save to Phone"
-                      >
-                        {savedToPhone ? <Check className="w-3 h-3 text-green-600" /> : <Download className="w-3 h-3" />}
-                        <span>{savedToPhone ? 'Saved!' : 'Save to Phone'}</span>
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => {
                           setSelfieSource(null);
                           setSelfieFile(null);
+                          startCamera();
                         }}
-                        className="px-2.5 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium hover:bg-black/80"
+                        className="px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-medium hover:bg-black/90 transition-colors cursor-pointer flex items-center gap-1.5 shadow-md"
                       >
-                        Retake
+                        <RotateCw className="w-3 h-3" />
+                        <span>Retake</span>
                       </button>
                     </div>
                   </div>
@@ -440,7 +432,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                       <button
                         onClick={toggleCameraFacing}
                         type="button"
-                        className="p-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md"
+                        className="p-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md cursor-pointer transition-colors"
                         title="Flip Camera"
                       >
                         <RotateCw className="w-4 h-4" />
@@ -448,43 +440,44 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                       <button
                         onClick={capturePhotoFromVideo}
                         type="button"
-                        className="w-14 h-14 rounded-full bg-white border-4 border-[#E05A47] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+                        className="w-14 h-14 rounded-full bg-white border-4 border-[#E05A47] shadow-lg flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
                         title="Capture Photo"
                       >
                         <div className="w-10 h-10 rounded-full bg-[#E05A47]" />
                       </button>
                       <button
-                        onClick={stopCamera}
+                        onClick={() => cameraInputRef.current?.click()}
                         type="button"
-                        className="p-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md"
-                        title="Cancel Camera"
+                        className="p-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-md cursor-pointer transition-colors"
+                        title="Open Native Camera App"
                       >
-                        <X className="w-4 h-4" />
+                        <Camera className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
-                    <Camera className="w-10 h-10 text-[#A3C4CB]" />
-                    <p className="text-xs text-[#A3C4CB]">
-                      No photo captured yet.
+                    <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white">
+                      <Camera className="w-7 h-7 text-[#E05A47]" />
+                    </div>
+                    <p className="text-xs text-white/90">
+                      Ready to snap a selfie with {personName}?
                     </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <div className="flex flex-col gap-2 justify-center w-full max-w-xs">
                       <button
                         type="button"
                         onClick={startCamera}
-                        className="px-3.5 py-2 rounded-xl bg-[#E05A47] text-white text-xs font-semibold hover:bg-[#C44633] flex items-center gap-1.5 shadow-xs"
+                        className="w-full py-2.5 px-4 rounded-xl bg-[#E05A47] text-white text-xs font-semibold hover:bg-[#C44633] flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98 transition-all"
                       >
-                        <Camera className="w-3.5 h-3.5" />
+                        <Camera className="w-4 h-4" />
                         <span>Open Camera</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-3.5 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 text-xs font-semibold flex items-center gap-1.5 border border-white/20"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="w-full py-2 px-4 rounded-xl bg-white/10 text-white hover:bg-white/20 text-xs font-medium flex items-center justify-center gap-1.5 border border-white/20 cursor-pointer transition-all"
                       >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload Gallery</span>
+                        <span>Use Phone Camera App</span>
                       </button>
                     </div>
                     {cameraError && (
@@ -494,22 +487,15 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 )}
               </div>
 
-              {/* Hidden file input */}
+              {/* Native front selfie camera input (No gallery upload) */}
               <input
-                ref={fileInputRef}
+                ref={cameraInputRef}
                 type="file"
                 accept="image/*"
+                capture="user"
                 className="hidden"
-                onChange={handleGalleryUpload}
+                onChange={handleNativeCameraCapture}
               />
-
-              {/* Privacy Notice: Stored on user's phone, not in DB */}
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#FDF2F0] border border-[#F3BEB5]/60 text-xs text-[#D34E2A]">
-                <Smartphone className="w-4 h-4 shrink-0" />
-                <span>
-                  <strong>Stored on your phone:</strong> Photos are saved to your device and never uploaded to our servers or database.
-                </span>
-              </div>
 
               {/* Mandatory Consent Checkbox */}
               <div
@@ -523,7 +509,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     : 'bg-[#F4F8F9] border-[#A3C4CB]/40 text-[#0B3B3D]/80'
                 }`}
               >
-                <button type="button" className="mt-0.5 text-[#E05A47] shrink-0 focus:outline-none">
+                <button type="button" className="mt-0.5 text-[#E05A47] shrink-0 focus:outline-none cursor-pointer">
                   {photoConsent ? (
                     <CheckSquare className="w-4 h-4 fill-[#E05A47] text-white" />
                   ) : (
@@ -543,7 +529,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     stopCamera();
                     setStep(1);
                   }}
-                  className="w-1/3 py-3 rounded-xl border border-[#A3C4CB] text-xs font-medium text-[#0B3B3D]"
+                  className="w-1/3 py-3 rounded-xl border border-[#A3C4CB] text-xs font-medium text-[#0B3B3D] cursor-pointer"
                 >
                   Back
                 </button>
@@ -551,7 +537,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   type="button"
                   onClick={handleValidateStep2}
                   disabled={!selfieSource || !photoConsent}
-                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     selfieSource && photoConsent
                       ? 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-xs'
                       : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed'
@@ -685,12 +671,6 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                     "{questionAnswer}"
                   </div>
                 </div>
-              </div>
-
-              {/* Privacy badge */}
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F4F8F9] border border-[#A3C4CB]/40 text-xs text-[#0B3B3D]/80">
-                <ShieldCheck className="w-4 h-4 text-[#D34E2A] shrink-0" />
-                <span>Selfie is saved directly to your phone • Zero database or server upload</span>
               </div>
 
               {/* Final Submit Actions */}

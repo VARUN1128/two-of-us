@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { BingoConnection, Participant } from '../../types';
-import { ArrowLeft, Users, Calendar, Sparkles, X, Heart, Download, Smartphone, Check } from 'lucide-react';
-import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
+import { ArrowLeft, Users, Calendar, Sparkles, X, Heart } from 'lucide-react';
 
 interface MyConnectionsPageProps {
   participant: Participant;
@@ -21,7 +20,6 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
     question: string;
     answer: string;
   } | null>(null);
-  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -182,10 +180,6 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
                 alt={selectedSelfie.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1.5">
-                <Smartphone className="w-3 h-3 text-[#A3C4CB] shrink-0" />
-                <span className="truncate">Saved on your phone only</span>
-              </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-[#FDF2F0] border border-[#E05A47]/20 space-y-1">
@@ -197,18 +191,13 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2 pt-1">
+            <div className="pt-2">
               <button
                 type="button"
-                onClick={async () => {
-                  await savePhotoToPhoneDevice(selectedSelfie.url, selectedSelfie.letter, selectedSelfie.name);
-                  setDownloadSuccess(true);
-                  setTimeout(() => setDownloadSuccess(false), 2500);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                onClick={() => setSelectedSelfie(null)}
+                className="w-full py-2.5 rounded-xl bg-[#E05A47] text-white text-xs font-semibold cursor-pointer"
               >
-                {downloadSuccess ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Download className="w-3.5 h-3.5" />}
-                <span>{downloadSuccess ? 'Saved to Your Phone!' : 'Save Photo to Phone'}</span>
+                Close
               </button>
             </div>
 
@@ -219,14 +208,6 @@ export const MyConnectionsPage: React.FC<MyConnectionsPageProps> = ({
           </div>
         </div>
       )}
-
-      {/* Privacy Guarantee Footer Note */}
-      <div className="mt-auto pt-6 text-center">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F4F8F9] border border-[#A3C4CB]/30 text-[11px] text-[#0B3B3D]/70">
-          <Smartphone className="w-3.5 h-3.5 text-[#E05A47]" />
-          <span>Photos are stored on your device only and are never uploaded to our database.</span>
-        </div>
-      </div>
     </div>
   );
 };

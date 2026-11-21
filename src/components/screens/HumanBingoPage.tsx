@@ -5,9 +5,8 @@ import { BingoInteractionModal } from './BingoInteractionModal';
 import { BingoSuccessNotification } from './BingoSuccessNotification';
 import { BingoLetterTracker } from '../common/BingoLetterTracker';
 import { ProgressBar } from '../common/ProgressBar';
-import { Users, Award, Trophy, Check, ArrowRight, Download, Smartphone, Lock } from 'lucide-react';
+import { Users, Award, Trophy, Check, ArrowRight, Lock } from 'lucide-react';
 import { AppDataStore } from '../../lib/store';
-import { savePhotoToPhoneDevice } from '../../lib/devicePhotoStorage';
 
 interface HumanBingoPageProps {
   participant: Participant;
@@ -33,7 +32,6 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
   const [newlyCompletedLines, setNewlyCompletedLines] = useState<WinningLine[]>([]);
   const [notificationCutLetters, setNotificationCutLetters] = useState<string[]>([]);
   const [viewCompletedLetter, setViewCompletedLetter] = useState<string | null>(null);
-  const [savedLocallyToast, setSavedLocallyToast] = useState(false);
 
   const evalResult = evaluateBingoBoard(board.letters, board.completed_letters);
   const winningIndices = getWinningCellIndices(board.letters, board.completed_letters);
@@ -381,10 +379,6 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                       alt={c.person_name}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1.5">
-                      <Smartphone className="w-3 h-3 text-[#A3C4CB] shrink-0" />
-                      <span className="truncate">Stored on your device only</span>
-                    </div>
                   </div>
 
                   <div className="space-y-1 text-xs">
@@ -394,19 +388,7 @@ export const HumanBingoPage: React.FC<HumanBingoPageProps> = ({
                     </p>
                   </div>
 
-                  <div className="space-y-2 pt-1">
-                    <button
-                      onClick={async () => {
-                        await savePhotoToPhoneDevice(c.selfie_url, c.bingo_letter, c.person_name);
-                        setSavedLocallyToast(true);
-                        setTimeout(() => setSavedLocallyToast(false), 2500);
-                      }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#FDF2F0] hover:bg-[#FCEEE8] border border-[#F3BEB5] text-[#D34E2A] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>{savedLocallyToast ? 'Saved to Your Phone!' : 'Save Photo to Phone'}</span>
-                    </button>
-
+                  <div className="pt-2">
                     <button
                       onClick={() => setViewCompletedLetter(null)}
                       className="w-full py-2.5 rounded-xl bg-[#E05A47] text-white text-xs font-semibold cursor-pointer"
