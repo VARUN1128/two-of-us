@@ -19,6 +19,7 @@ import { MatchesPage } from './components/screens/MatchesPage';
 import { MyConnectionsPage } from './components/screens/MyConnectionsPage';
 import { CompletionPage } from './components/screens/CompletionPage';
 import { AdminDashboard } from './components/screens/AdminDashboard';
+import { CreativeLoader } from './components/common/CreativeLoader';
 import { AlertCircle } from 'lucide-react';
 
 export default function App() {
@@ -203,18 +204,11 @@ export default function App() {
   // Loading Screen
   if (isLoadingSession) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-10 h-10 border-3 border-[#E05A47] border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 
-          className="text-2xl font-medium text-[#0B3B3D]"
-          style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
-        >
-          Two of Us
-        </h2>
-        <p className="text-xs text-[#0B3B3D]/70 font-sans mt-1">
-          Loading live event experience...
-        </p>
-      </div>
+      <CreativeLoader
+        fullScreen
+        message="Setting the stage for sparks..."
+        subtitle="Loading your live event experience"
+      />
     );
   }
 

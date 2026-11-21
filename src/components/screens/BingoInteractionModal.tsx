@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RANDOM_QUESTION_BANK } from '../../constants/questions';
+import { CreativeLoader } from '../common/CreativeLoader';
 import { 
   X, 
   Camera, 
@@ -30,8 +31,8 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  // Steps: 1: Person Details, 2: Selfie, 3: Random Question, 4: Final Submit
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // Steps: 1: Person Details, 2: Selfie, 3: Random Question & Direct Submit
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Form fields
   const [personName, setPersonName] = useState('');
@@ -221,15 +222,15 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
     setStep(3);
   };
 
-  // Step 3 Validation
-  const handleValidateStep3 = (e: React.FormEvent) => {
+  // Step 3 Validation & Immediate Submit (Streamlined single flow: no redundant Step 4)
+  const handleValidateStep3 = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionAnswer.trim()) {
       setErrorMsg('Please enter their answer to the question.');
       return;
     }
     setErrorMsg(null);
-    setStep(4);
+    await handleFinalSubmit();
   };
 
   // Final Submit
@@ -278,7 +279,7 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 Found someone for '{letter.toUpperCase()}'?
               </h3>
               <p className="text-[11px] text-[#0B3B3D]/70 font-sans">
-                Step {step} of 4 • Human Bingo
+                Step {step} of 3 • Human Bingo
               </p>
             </div>
           </div>
@@ -597,100 +598,27 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                 />
               </div>
 
-              {/* Step 3 Actions */}
+              {/* Step 3 Actions: Single streamlined flow to Mark Off Letter */}
               <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="w-1/3 py-3 rounded-xl border border-[#A3C4CB] text-xs font-medium text-[#0B3B3D]"
+                  disabled={isSubmitting}
+                  className="w-1/3 py-3 rounded-xl border border-[#A3C4CB] text-xs font-medium text-[#0B3B3D] cursor-pointer hover:bg-[#F4F8F9] transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
-                  disabled={!questionAnswer.trim()}
-                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                    questionAnswer.trim()
+                  disabled={!questionAnswer.trim() || isSubmitting}
+                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md active:scale-98 ${
+                    questionAnswer.trim() && !isSubmitting
                       ? 'bg-[#E05A47] hover:bg-[#C44633] text-white shadow-xs'
                       : 'bg-[#A3C4CB]/40 text-[#0B3B3D]/40 cursor-not-allowed'
                   }`}
                 >
-                  <span>Review & Complete</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* ================= STEP 4 ================= */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <div className="text-center space-y-1">
-                <div className="w-10 h-10 rounded-full bg-[#FDF2F0] text-[#E05A47] flex items-center justify-center mx-auto mb-1">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-                <h4 
-                  className="text-2xl font-medium text-[#0B3B3D]"
-                  style={{ fontFamily: 'Cormorant Garamond, Playfair Display, serif' }}
-                >
-                  Got your connection!
-                </h4>
-                <p className="text-xs text-[#0B3B3D]/75">
-                  Confirm the details below to mark letter <strong>{letter.toUpperCase()}</strong> on your board.
-                </p>
-              </div>
-
-              {/* Summary Card */}
-              <div className="p-4 rounded-2xl bg-[#F4F8F9] border border-[#A3C4CB]/40 space-y-3">
-                <div className="flex items-center gap-3">
-                  {selfieSource && (
-                    <img
-                      src={selfieSource}
-                      alt="Connection selfie"
-                      className="w-14 h-14 rounded-xl object-cover border border-[#E05A47]/30"
-                    />
-                  )}
-                  <div>
-                    <div className="text-xs text-[#E05A47] font-semibold">
-                      Letter '{letter.toUpperCase()}'
-                    </div>
-                    <div className="text-base font-semibold text-[#0B3B3D]">
-                      {personName}
-                    </div>
-                    <div className="text-[11px] text-[#0B3B3D]/60">
-                      Consented selfie attached
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-[#A3C4CB]/30 space-y-1">
-                  <div className="text-[11px] font-semibold text-[#0B3B3D]">
-                    Q: {assignedQuestion}
-                  </div>
-                  <div className="text-xs italic text-[#E05A47] bg-white p-2 rounded-lg border border-[#A3C4CB]/30">
-                    "{questionAnswer}"
-                  </div>
-                </div>
-              </div>
-
-              {/* Final Submit Actions */}
-              <div className="flex gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  disabled={isSubmitting}
-                  className="w-1/3 py-3 rounded-xl border border-[#A3C4CB] text-xs font-medium text-[#0B3B3D]"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={handleFinalSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#E05A47] hover:bg-[#C44633] text-white text-xs font-semibold transition-all shadow-md active:scale-98 flex items-center justify-center gap-1.5 disabled:opacity-50"
-                >
                   {isSubmitting ? (
-                    <span>Saving Connection...</span>
+                    <span>Marking Off Letter...</span>
                   ) : (
                     <>
                       <span>Mark Off Letter '{letter.toUpperCase()}'</span>
@@ -699,9 +627,20 @@ export const BingoInteractionModal: React.FC<BingoInteractionModalProps> = ({
                   )}
                 </button>
               </div>
-            </div>
+            </form>
           )}
         </div>
+
+        {/* Creative Loader Overlay during submission */}
+        {isSubmitting && (
+          <div className="absolute inset-0 z-30 bg-[#FDF8F4]/95 backdrop-blur-xs flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <CreativeLoader
+              size="sm"
+              message={`Connecting with ${personName}...`}
+              subtitle={`Marking off letter '${letter.toUpperCase()}' on your board`}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

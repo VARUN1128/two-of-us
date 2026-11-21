@@ -19,6 +19,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { fireBingoConfetti } from '../common/Confetti';
+import { CreativeLoader } from '../common/CreativeLoader';
 
 const InstagramIcon: React.FC<{ className?: string }> = ({ className = "w-3.5 h-3.5" }) => (
   <svg 
@@ -293,10 +294,11 @@ export const MatchesPage: React.FC<MatchesPageProps> = ({
 
       {/* Loading state */}
       {isLoading ? (
-        <div className="py-16 text-center space-y-3">
-          <div className="w-10 h-10 border-3 border-[#E05A47] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-[#0B3B3D]/70">Comparing 9 questionnaire dimensions...</p>
-        </div>
+        <CreativeLoader
+          size="sm"
+          message="Analyzing 9 questionnaire dimensions..."
+          subtitle="Pairing you with attendees who share your worldview and energy"
+        />
       ) : filteredMatches.length === 0 ? (
         <div className="p-8 text-center bg-[#F4F8F9] rounded-3xl border border-[#A3C4CB]/30 space-y-3">
           <Heart className="w-8 h-8 text-[#A3C4CB] mx-auto" />
