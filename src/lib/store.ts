@@ -81,6 +81,15 @@ export function sanitizeInstagramId(input: string): string {
   return trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
 }
 
+export interface AdminParticipantRow {
+  participant: Participant;
+  completedLettersCount: number;
+  completedLinesCount: number;
+  isBoardComplete: boolean;
+  lastActive: string;
+  connections: BingoConnection[];
+}
+
 export class AppDataStore {
   /**
    * Register a new participant
@@ -801,17 +810,20 @@ export class AppDataStore {
       completedBingoBoards: number;
       avgConnectionsPerParticipant: number;
     };
-    participants: Array<{
-      participant: Participant;
-      completedLettersCount: number;
-      completedLinesCount: number;
-      isBoardComplete: boolean;
-      lastActive: string;
-    }>;
+    participants: AdminParticipantRow[];
   }> {
-    let participants: Participant[] = [];
-    let boards: BingoBoard[] = [];
-    let connections: BingoConnection[] = [];
+    const localP = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const localB = getLocal<BingoBoard[]>(LOCAL_BOARDS_KEY, []);
+    const localC = getLocal<BingoConnection[]>(LOCAL_CONNECTIONS_KEY, []);
+
+    const participantsMap = new Map<string, Participant>();
+    localP.forEach((p) => participantsMap.set(p.id, p));
+
+    const boardsMap = new Map<string, BingoBoard>();
+    localB.forEach((b) => boardsMap.set(b.participant_id, b));
+
+    const connectionsMap = new Map<string, BingoConnection>();
+    localC.forEach((c) => connectionsMap.set(c.id, c));
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -821,51 +833,63 @@ export class AppDataStore {
           supabase.from('bingo_connections').select('*'),
         ]);
 
-        if (pRes.data) participants = pRes.data;
-        if (bRes.data) boards = bRes.data;
-        if (cRes.data) connections = cRes.data;
+        if (pRes.data) pRes.data.forEach((p: Participant) => participantsMap.set(p.id, p));
+        if (bRes.data) bRes.data.forEach((b: BingoBoard) => boardsMap.set(b.participant_id, b));
+        if (cRes.data) cRes.data.forEach((c: BingoConnection) => connectionsMap.set(c.id, c));
       } catch (e) {
         console.warn('Admin fetch error from Supabase, reading local:', e);
       }
     }
 
-    if (participants.length === 0) {
-      participants = getLocal<Participant[]>(LOCAL_PARTICIPANTS_KEY, []);
-      boards = getLocal<BingoBoard[]>(LOCAL_BOARDS_KEY, []);
-      connections = getLocal<BingoConnection[]>(LOCAL_CONNECTIONS_KEY, []);
-    }
+    const participants = Array.from(participantsMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const boards = Array.from(boardsMap.values());
+    const connections = Array.from(connectionsMap.values());
 
     const totalRegistrations = participants.length;
     const questionnaireCompleted = participants.filter((p) => p.questionnaire_completed).length;
     const totalConnections = connections.length;
+
+    // Group connections by participant
+    const connectionsByParticipant = new Map<string, BingoConnection[]>();
+    connections.forEach((c) => {
+      const list = connectionsByParticipant.get(c.participant_id) || [];
+      list.push(c);
+      connectionsByParticipant.set(c.participant_id, list);
+    });
     
     // Board stats
     let completedBingoBoards = 0;
-    const boardByParticipant = new Map<string, BingoBoard>();
     boards.forEach((b) => {
-      boardByParticipant.set(b.participant_id, b);
       if (b.completed_letters && b.completed_letters.length >= 25) {
         completedBingoBoards++;
       }
     });
 
-    const activeBingoParticipants = boards.filter(
-      (b) => b.completed_letters && b.completed_letters.length > 0
-    ).length;
+    const activeBingoParticipants = participants.filter((p) => {
+      const pConns = connectionsByParticipant.get(p.id);
+      const b = boardsMap.get(p.id);
+      return (pConns && pConns.length > 0) || (b && b.completed_letters && b.completed_letters.length > 0);
+    }).length;
 
     const avgConnectionsPerParticipant =
       totalRegistrations > 0 ? Number((totalConnections / totalRegistrations).toFixed(1)) : 0;
 
-    const participantRows = participants.map((p) => {
-      const b = boardByParticipant.get(p.id);
+    const participantRows: AdminParticipantRow[] = participants.map((p) => {
+      const b = boardsMap.get(p.id);
       const completedLetters = b ? b.completed_letters : [];
       const evalRes = b ? evaluateBingoBoard(b.letters, completedLetters) : null;
+      const pConnections = connectionsByParticipant.get(p.id) || [];
+      const totalMet = Math.max(completedLetters.length, pConnections.length);
+
       return {
         participant: p,
-        completedLettersCount: completedLetters.length,
+        completedLettersCount: totalMet,
         completedLinesCount: evalRes ? evalRes.completedCount : 0,
-        isBoardComplete: completedLetters.length >= 25,
+        isBoardComplete: totalMet >= 25,
         lastActive: p.created_at,
+        connections: pConnections,
       };
     });
 
